@@ -59,7 +59,7 @@
 }
 
 .login-card button:hover {
-  background-color: #2563eb;
+  background-color: #010e2b;
 }
 
 .login-card button:disabled {
@@ -91,5 +91,38 @@
 .login-card select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+
+.role-selection {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  background-color: #f9fafb;
+  font-weight: bold;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: all 0.2s;
+}
+
+.role-btn:last-child {
+  margin-right: 0;
+}
+
+.role-btn.active {
+  background-color: #d1fae5; /* light green */
+  border-color: #021b12; /* green */
+  color: #0a7e5b;
+}
+
+.role-btn:hover {
+  background-color: #e5e7eb;
 }
 

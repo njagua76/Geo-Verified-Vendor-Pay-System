@@ -6,7 +6,7 @@ import "../Login.css";
 function Login() {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState(""); // new state for role
+  const [role, setRole] = useState(""); // Role state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +27,6 @@ function Login() {
       const res = await api.post("/login", { email, password, role });
       localStorage.setItem("token", res.data.token);
 
-      // redirect based on role returned from backend
       if (res.data.role === "Administrator") {
         navigate("/dashboard");
       } else {
@@ -43,24 +42,32 @@ function Login() {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-card">
-        <h2>Geo-Verified Vendor Pay</h2>
+        <h2>Welcome Back</h2>
+        <p className="sub-title">Sign in to access your account</p>
 
         {error && <p className="error">{error}</p>}
 
-        {/* Role selection dropdown */}
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          required
-        >
-          <option value="">Select Role</option>
-          <option value="Administrator">Administrator</option>
-          <option value="Field Agent">Field Agent</option>
-        </select>
+        {/* Role selection buttons */}
+        <div className="role-selection">
+          <button
+            type="button"
+            className={`role-btn ${role === "Field Agent" ? "active" : ""}`}
+            onClick={() => setRole("Field Agent")}
+          >
+            Field Agent
+          </button>
+          <button
+            type="button"
+            className={`role-btn ${role === "Administrator" ? "active" : ""}`}
+            onClick={() => setRole("Administrator")}
+          >
+            Administrator
+          </button>
+        </div>
 
         <input
           type="email"
-          placeholder="your@email.com"
+          placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -68,14 +75,14 @@ function Login() {
 
         <input
           type="password"
-          placeholder="********"
+          placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
         <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Signing In..." : "Sign In"}
         </button>
       </form>
     </div>
