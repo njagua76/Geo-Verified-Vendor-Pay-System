@@ -41,6 +41,10 @@ function Login() {
 
   return (
     <div className="login-container">
+
+      <h1 className="login-header">GeoVend Pay 🌍</h1>
+      <p>Geo-Verified Vendor Payments.</p>
+      
       <form onSubmit={handleSubmit} className="login-card">
         <h2>Welcome Back</h2>
         <p className="sub-title">Sign in to access your account</p>

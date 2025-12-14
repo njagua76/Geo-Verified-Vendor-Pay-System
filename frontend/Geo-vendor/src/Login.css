@@ -2,11 +2,26 @@
 .login-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   background: linear-gradient(to right, #3b82f6, #8b5cf6); /* blue to purple */
   font-family: Arial, sans-serif;
+  padding: 20px;
 }
+
+.login-header {
+  text-align: center;
+  font-size: 36px;
+  font-weight: bold;
+  color: #181111; 
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+
+
+
 
 /* White card with shadow and rounded corners */
 .login-card {
@@ -59,7 +74,7 @@
 }
 
 .login-card button:hover {
-  background-color: #010e2b;
+  background-color: #8798bd;
 }
 
 .login-card button:disabled {
