@@ -26,6 +26,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "Geo-vendor/src/components", "Geo-vendor/src/src/main.tsxGeo-vendor/src/src/hooksooks"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
