@@ -1,0 +1,5 @@
+@import 'leaflet/dist/leaflet.css'; /* Import Leaflet CSS for map styling */
+
+@tailwind base; /* Import Tailwind base styles */
+@tailwind components; /* Import Tailwind component styles */
+@tailwind utilities; /* Import Tailwind utility styles */
