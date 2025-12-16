@@ -7,6 +7,11 @@
 [![React](https://img.shields.io/badge/React-18.x-blue.svg)](https://reactjs.org)
 [![Flask](https://img.shields.io/badge/Flask-3.x-lightgrey.svg)](https://flask.palletsprojects.com)
 
+## 🔗 Project Resources
+Access all project management and deployment resources:
+
+[![Project Dashboard](https://img.shields.io/badge/📊_Project_Dashboard-Google_Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)](https://docs.google.com/spreadsheets/d/1uHbQqlwSuTcRzPriG5jpdqzF0S3pkmtvWNR_9m5R01w/edit?usp=sharing)
+
 ## 📋 Overview
 
 The **Geo-Verified Vendor Pay System** ensures strict compliance in supply chain payments by enforcing that vendor disbursements via **M-Pesa B2C** are executed only after a field agent's physical location is verified to be within **≤20 meters** of the official supplier hub. Security is enforced using **JWT-based Role-Based Access Control (RBAC)**, separating Field Agent (payment execution) and Administrator (monitoring) functions.
