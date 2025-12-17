@@ -52,11 +52,11 @@ class AuthService:
         #Encode the token
         #jwt.encode(payload, secrey_key, algorithm)
         #Returns a string "56eyve56yb546y..."
-        token = jwt.encode{
+        token = jwt.encode(
             payload, 
             Config.JWT_SECRET_KEY,
             algorithm='HS256'
-        }
+        )
         return token
     @staticmethod
     def login(email, password):
