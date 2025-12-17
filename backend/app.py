@@ -6,6 +6,7 @@ initializes the database, and registers all routes.
 """
 from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
 from config import Config
 from models import db
 from routes.auth import auth_bp
@@ -21,6 +22,10 @@ def create_app():
     #intialise SQLAlchemy with this app
     db.init_app(app)
 
+    #Initialize Flask-Migrate for database migrations
+    #This replaces db.create_all() with a migration-based approach
+    migrate = Migrate(app, db)
+
     #Enable CORS for all routes
     #Allows frontend to call the API
     #restrinct specific origins
@@ -32,11 +37,6 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(protected_bp)
     #REGISTER FUTURE BLUEPRINTS HERE
-
-    #create database tables
-    with app.app_context():
-        db.create_all()
-        print("Database tables created successfully")
 
     #Define root route
     @app.route('/')
