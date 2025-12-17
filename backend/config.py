@@ -30,8 +30,7 @@ class Config:
     # JWT (JSON Web Token) CONFIGURATION
     # ═══════════════════════════════════════════════════════════
     
-    # Secret key for signing JWTs (MUST be secret in production!)
-    # ⚠️ SECURITY: In production, generate with: openssl rand -hex 32
+
     JWT_SECRET_KEY = os.getenv(
         'JWT_SECRET_KEY',
         'dev-secret-key-CHANGE-IN-PRODUCTION'  # Using this only for development
@@ -72,7 +71,6 @@ class Config:
     # Flask secret key (for session cookies, CSRF tokens)
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-flask-secret-CHANGE-ME')
     
-    # Enable debug mode in development (auto-reload, detailed errors)
-    # ⚠️ ⚠️ ⚠️ NEVER set to True in production! Security risk!
+
     DEBUG = os.getenv('FLASK_ENV', 'development') == 'development'
 
