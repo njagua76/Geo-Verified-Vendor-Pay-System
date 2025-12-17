@@ -42,3 +42,31 @@ class AuthService:
         expiration = datetime.now(timezone.utc) + Config.JWT_ACCESS_TOKEN_EXPIRES
 
         #Create the payload
+        payload = {
+            'user_id': user.id,
+            'email': user.email,
+            'role_name': user.role.role_name, #Access via the relationship
+            'exp': expiration #JWT libraty handles timestamp conversions
+        }
+
+        #Encode the token
+        #jwt.encode(payload, secrey_key, algorithm)
+        #Returns a string "56eyve56yb546y..."
+        token = jwt.encode{
+            payload, 
+            Config.JWT_SECRET_KEY,
+            algorithm='HS256'
+        }
+        return token
+    @staticmethod
+    def login(email, password):
+        """Complete login flow: authenticate and generate token"""
+
+    #Step 1: Verify the credentials
+        user = AuthService.authenticate_user(email,password)
+
+        if not user:
+            return None, None
+        
+        token = AuthService.generate_token(user)
+        return token, user
