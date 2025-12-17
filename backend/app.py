@@ -9,6 +9,7 @@ from flask_cors import CORS
 from config import Config
 from models import db
 from routes.auth import auth_bp
+from routes.protected_routes import protected_bp
 
 def create_app():
     """Application factory function"""
@@ -29,6 +30,7 @@ def create_app():
     #All routes in auth_bp are now accessible
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(protected_bp)
     #REGISTER FUTURE BLUEPRINTS HERE
 
     #create database tables
