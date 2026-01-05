@@ -11,6 +11,8 @@ from config import Config
 from models import db
 from routes.auth import auth_bp
 from routes.protected_routes import protected_bp
+from routes.suppliers import suppliers_bp
+
 
 def create_app():
     """Application factory function"""
@@ -36,6 +38,7 @@ def create_app():
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(protected_bp)
+    app.register_blueprint(suppliers_bp)
     #REGISTER FUTURE BLUEPRINTS HERE
 
     #Define root route
@@ -45,7 +48,7 @@ def create_app():
         return{
             'message': 'Geo-Verified Vendor Pay API is up and running',
             'status': 'active and running',
-            'version': '1.0.0 well... kinda'
+            'version': '1.0.0'
         }
     
     return app
