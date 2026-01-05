@@ -48,7 +48,7 @@ def create_app():
         return{
             'message': 'Geo-Verified Vendor Pay API is up and running',
             'status': 'active and running',
-            'version': '1.0.0 well... kinda'
+            'version': '1.0.0'
         }
     
     return app
