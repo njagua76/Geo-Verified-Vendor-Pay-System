@@ -11,6 +11,8 @@ from config import Config
 from models import db
 from routes.auth import auth_bp
 from routes.protected_routes import protected_bp
+from routes.suppliers import suppliers_bp
+
 
 def create_app():
     """Application factory function"""
@@ -36,6 +38,7 @@ def create_app():
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(protected_bp)
+    app.register_blueprint(suppliers_bp)
     #REGISTER FUTURE BLUEPRINTS HERE
 
     #Define root route
