@@ -6,6 +6,7 @@ This file initializes SQLAlchemy and makes models easily importable.
 
 from flask_sqlalchemy import SQLAlchemy
 
+
 # ═══════════════════════════════════════════════════════════
 # DATABASE INSTANCE
 # ═══════════════════════════════════════════════════════════
@@ -26,5 +27,5 @@ db = SQLAlchemy()
 
 from models.role import Role           # User roles (Admin, Field Agent)
 from models.user import User           # User accounts with passwords
-# from models.supplier import Supplier   # Supplier/vendor information
+from models.supplier import Supplier   # Supplier/vendor information
 # from models.transaction_log import TransactionLog  # Payment transaction records

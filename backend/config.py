@@ -6,6 +6,8 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
+load_dotenv()
+
 class Config:
     """Configuration class that loads settings from environment variables."""
     
