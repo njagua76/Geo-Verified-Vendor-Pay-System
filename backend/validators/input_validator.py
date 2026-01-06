@@ -73,16 +73,59 @@ def validate_longitude(longitude):
     """Validate longitude coordinate"""
     #Check if the value exists
     if longitude is None or longitude == "":
-        return False, "Logitude is required", None
+        return False, "Longitude is required", None
     
     try:
-        lon = float(longitude):
+        lon = float(longitude)
     except(ValueError, TypeError):
-        return False, "Logitude must ba a valid number", None
+        return False, "Longitude must be a valid number", None
     
-    #step3: Check range (-100 to +180)
+    #step3: Check range (-180 to +180)
     if lon < -180 or lon > 180:
-        return False, "Logitude must be between -180 and 180 degrees", None
+        return False, "Longitude must be between -180 and 180 degrees", None
     
     return True, "", lon
+    
+def validate_phone_number(phone):
+    """Validate phone number entered is valid and clean input to allow dynamic number entry formats"""
+
+    if not phone:
+        return False, "Phone number is required"
+    
+    phone = str(phone).strip()
+
+    #remove formatting characters
+    phone = phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+
+    #remove leading characters
+    if phone.startswith("+"):
+        phone = phone[1:] #slice from index 1 to the end
+
+    #perform normalisation to the mpesa accepted format 254xxxxxx
+
+    if phone.startswith("0"):
+        phone = "254" + phone[1:]
+    
+    elif phone.startswith("7") and len(phone) == 9:
+        phone = "254" + phone
+    elif not phone.startswith("254"):
+        return False, "Invalid phone number format use 07xxxxxxxx"
+
+    #check the length greater or less than 12 digits fail
+    if len(phone) !=12:
+        return False, "Valid phone numberust be 12 digits long"
+    
+    #Check if strings contains only digits - like possitive string values
+    if not phone.isdigit():
+        return False, "Phone number must contain only digits", None
+
+    if not phone.startswith("2547"):
+        return False, "Phone number must be a valid Kenyan number"
+    
+    return True, "", phone
+
+
+    
+    
+    
     
