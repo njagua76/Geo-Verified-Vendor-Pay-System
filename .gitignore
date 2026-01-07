@@ -27,7 +27,7 @@
 # ============================================
 # SECURITY & SECRETS (NEVER COMMIT)
 # ============================================
-.env
+
 .env.local
 .env.render
 .env.*.local
