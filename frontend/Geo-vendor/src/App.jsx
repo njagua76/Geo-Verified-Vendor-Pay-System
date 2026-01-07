@@ -1,40 +1,39 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import Login from './components/Auth/Login';
-import Dashboard from './components/Admin/Dashboard';
-import Verify from './components/FieldAgent/Verify';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
+import { Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./components/Admin/Dashboard";
+import Users from "./components/Admin/Users";
+import Suppliers from "./components/Admin/Suppliers";
+import Transactions from "./components/Admin/Transactions";
+import Welcome from "./components/Welcome";   // << Correct import
+import { useAuth } from "./context/AuthContext";
 
 function App() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div>Loading...</div>;
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Login */}
-          <Route path="/login" element={<Login />} />
+    <Routes>
+      {/* PUBLIC ROUTE */}
+      <Route path="/" element={<Welcome />} />
 
-          {/* Admin Dashboard */}
-          <Route path="/admin/dashboard" element={
-            <ProtectedRoute allowedRole="Admin">
-              <Dashboard />
-            </ProtectedRoute>
-          } />
+      {/* PROTECTED ADMIN ROUTES */}
+      {user ? (
+        <>
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/users" element={<Users />} />
+          <Route path="/admin/suppliers" element={<Suppliers />} />
+          <Route path="/admin/transactions" element={<Transactions />} />
+        </>
+      ) : (
+        <>
+          {/* Redirect all admin routes to login if not logged in */}
+          <Route path="/admin/*" element={<Navigate to="/" replace />} />
+        </>
+      )}
 
-          {/* Field Agent */}
-          <Route path="/agent/verify" element={
-            <ProtectedRoute allowedRole="Field Agent">
-              <Verify />
-            </ProtectedRoute>
-          } />
-
-          {/* Default redirect for "/" */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-
-          {/* Optional: catch-all for 404 */}
-          <Route path="*" element={<p>Page not found</p>} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      {/* CATCH ALL → send to login */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
