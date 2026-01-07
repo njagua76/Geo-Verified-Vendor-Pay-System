@@ -7,6 +7,8 @@ Endpoints:
 
 from flask import Blueprint, request , jsonify
 from services.auth_service import AuthService
+#import the validators
+from validators.input_validator import validate_email, validate_password
 
 
 #Create authentication blueprint
@@ -34,11 +36,26 @@ def login():
     email = data.get('email')
     password = data.get('password')
     
-    #Check if both fields are present and not empty
-    if not email or not password:
-        return jsonify({
-            'error': 'Email and password must be entered!!!'
-        }), 400
+    # Create a dictionary to collect all validation errors
+    # Using a dict allows us to map each field to its specific error
+    errors = {}
+    
+    # Validate email - but DON'T return yet
+    is_valid, error_msg = validate_email(email)
+    if not is_valid:
+        # Store the error in the errors dict with 'email' as the key
+        errors['email'] = error_msg
+    
+    # Validate password - also don't return yet
+    is_valid, error_msg = validate_password(password)
+    if not is_valid:
+        # Store the error in the errors dict with 'password' as the key
+        errors['password'] = error_msg
+    
+    # NOW check if we collected any errors
+    # If errors dict is not empty, return all errors at once
+    if errors:
+        return jsonify({'errors': errors}), 400
     
     #step 3: Authenticate user
     try:
