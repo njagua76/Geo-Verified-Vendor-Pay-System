@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://geo-vendor-backend.onrender.com';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -36,7 +36,7 @@ apiClient.interceptors.response.use(
 
 export const authAPI = {
   login: (email, password) => 
-    apiClient.post('/login', { email, password }),
+    apiClient.post('/api/auth/login', { email, password }),
   
   logout: () => {
     localStorage.removeItem('token');
@@ -44,24 +44,13 @@ export const authAPI = {
   },
 };
 
-export const supplierAPI = {
-  getAll: () => apiClient.get('/suppliers'),
-  getById: (id) => apiClient.get(`/suppliers/${id}`),
-  create: (data) => apiClient.post('/suppliers', data),
-  update: (id, data) => apiClient.put(`/suppliers/${id}`, data),
-  delete: (id) => apiClient.delete(`/suppliers/${id}`),
+export const dashboardAPI = {
+  getAdmin: () => apiClient.get('/api/admin/dashboard'),
+  getAgent: () => apiClient.get('/api/agent/verify'),
 };
 
-export const transactionAPI = {
-  getAll: () => apiClient.get('/transactions'),
-  getById: (id) => apiClient.get(`/transactions/${id}`),
-  verify: (data) => apiClient.post('/verify', data),
-};
-
-export const userAPI = {
-  getProfile: () => apiClient.get('/user/profile'),
-  getAll: () => apiClient.get('/users'),
-  create: (data) => apiClient.post('/users', data),
+export const profileAPI = {
+  getProfile: () => apiClient.get('/api/profile'),
 };
 
 export default apiClient;

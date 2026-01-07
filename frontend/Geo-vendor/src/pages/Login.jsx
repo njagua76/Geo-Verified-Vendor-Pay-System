@@ -21,10 +21,10 @@ export const Login = () => {
     
     if (result.success) {
       // Redirect based on user role
-      const role = result.user?.role || result.user?.role_name;
-      if (role === 'administrator') {
+      const role = result.user?.role;
+      if (role === 'Admin') {
         navigate('/dashboard');
-      } else if (role === 'field_agent') {
+      } else if (role === 'Field Agent') {
         navigate('/verify');
       } else {
         navigate('/');
@@ -34,6 +34,16 @@ export const Login = () => {
     }
     
     setLoading(false);
+  };
+
+  const fillTestAdmin = () => {
+    setEmail('admin@example.com');
+    setPassword('admin123');
+  };
+
+  const fillTestAgent = () => {
+    setEmail('agent@example.com');
+    setPassword('agent123');
   };
 
   return (
@@ -59,8 +69,8 @@ export const Login = () => {
 
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 animate-slide-in" style={{ animationDelay: '0.1s' }}>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600 mb-8">Sign in to your account to continue</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
+          <p className="text-gray-600 mb-8">Enter your credentials to access the system</p>
 
           {error && (
             <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
@@ -123,6 +133,27 @@ export const Login = () => {
               )}
             </button>
           </form>
+
+          {/* Test Credentials */}
+          <div className="mt-6 space-y-3">
+            <p className="text-xs font-medium text-gray-600 uppercase">Test Credentials</p>
+            <button
+              type="button"
+              onClick={fillTestAdmin}
+              className="w-full p-3 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors text-left"
+            >
+              <p className="text-xs font-medium text-blue-900">Admin Account</p>
+              <p className="text-xs text-blue-700 mt-1">admin@example.com / admin123</p>
+            </button>
+            <button
+              type="button"
+              onClick={fillTestAgent}
+              className="w-full p-3 rounded-lg bg-green-50 border border-green-200 hover:bg-green-100 transition-colors text-left"
+            >
+              <p className="text-xs font-medium text-green-900">Field Agent Account</p>
+              <p className="text-xs text-green-700 mt-1">agent@example.com / agent123</p>
+            </button>
+          </div>
         </div>
 
         {/* Footer */}

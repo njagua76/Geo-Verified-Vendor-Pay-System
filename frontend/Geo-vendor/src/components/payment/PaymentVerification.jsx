@@ -111,8 +111,7 @@ export const PaymentVerification = () => {
     setMessage('Processing payment...');
 
     try {
-      const supplier = suppliers.find((s) => s.id === parseInt(selectedSupplier));
-      const response = await axios.post('/api/verify', {
+      await axios.post('/api/verify', {
         supplier_id: selectedSupplier,
         amount: parseFloat(amount),
         latitude: location.latitude,

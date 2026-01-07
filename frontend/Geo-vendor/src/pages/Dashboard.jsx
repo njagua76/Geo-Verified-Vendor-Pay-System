@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, TrendingUp, DollarSign, Users, Building2, MapPin, RefreshCw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { Activity, TrendingUp, DollarSign, Building2, MapPin, RefreshCw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
 export const Dashboard = () => {

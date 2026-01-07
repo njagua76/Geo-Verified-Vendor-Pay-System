@@ -7,17 +7,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Base API URL from .env or fallback
-  axios.defaults.baseURL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
-  // Attach token automatically to axios
-  if (token) {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  } else {
-    delete axios.defaults.headers.common["Authorization"];
-  }
-
+  // Initialize from localStorage on mount
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
@@ -25,6 +17,10 @@ export const AuthProvider = ({ children }) => {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
+      setIsLoggedIn(true);
+      
+      // Set the token in axios headers
+      axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
     }
 
     setLoading(false);
@@ -32,34 +28,47 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post("/login", { email, password });
-      const { token, user } = res.data;
+      const baseURL = process.env.REACT_APP_API_URL || "https://geo-vendor-backend.onrender.com";
+      const response = await axios.post(
+        `${baseURL}/api/auth/login`,
+        { email, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      const { token: newToken, user: userData } = response.data;
 
-      setToken(token);
-      setUser(user);
+      // Store token and user in state and localStorage
+      setToken(newToken);
+      setUser(userData);
+      setIsLoggedIn(true);
 
-      return { success: true, user };
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // Set token in axios headers for future requests
+      axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+
+      return { success: true, user: userData };
     } catch (error) {
-      return {
-        success: false,
-        message:
-          error.response?.data?.error || "Login failed. Please check credentials.",
-      };
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Invalid credentials";
+      return { success: false, message };
     }
   };
 
   const logout = () => {
+    setUser(null);
+    setToken(null);
+    setIsLoggedIn(false);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
+    delete axios.defaults.headers.common["Authorization"];
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, loading, isLoggedIn, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
