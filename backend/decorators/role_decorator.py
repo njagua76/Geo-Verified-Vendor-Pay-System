@@ -91,7 +91,7 @@ def role_required(required_role):
                 }), 403
             
             # Step 3: User Authorized - Execute Route Function
-            #kwargs['current_user'] = payload
+            kwargs['current_user'] = payload
             
             return f(*args, **kwargs)
         
