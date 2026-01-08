@@ -20,7 +20,9 @@ export const PaymentVerification = () => {
   const fetchSuppliers = async () => {
     try {
       const response = await axios.get('/api/suppliers');
-      setSuppliers(response.data || []);
+      // Handle both array and object responses
+      const supplierData = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      setSuppliers(supplierData);
     } catch (err) {
       console.error('Error fetching suppliers:', err);
       setSuppliers([]);
@@ -32,10 +34,12 @@ export const PaymentVerification = () => {
   const fetchRecentTransactions = async () => {
     try {
       const response = await axios.get('/api/transactions');
-      const txns = response.data || [];
-      setRecentTransactions(txns.slice(0, 3));
+      // Handle both array and object responses
+      const txnData = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      setRecentTransactions(txnData.slice(0, 3));
     } catch (err) {
       console.error('Error fetching transactions:', err);
+      setRecentTransactions([]);
     }
   };
 
