@@ -29,15 +29,12 @@ def create_app():
     # -------------------------------
     CORS(
         app,
-        resources={
-            r"/api/*": {
-                "origins": [
-                    "http://localhost:3000",
-                    "http://127.0.0.1:3000",
-                     "https://geo-verified-vendor-pay-system-git-develop-njagua76s-projects.vercel.app/"  # 👈 your frontend
-                ]
-            }
-        },
+        origins=[
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:5000",
+            "http://127.0.0.1:5000"
+        ],
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization"],
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
