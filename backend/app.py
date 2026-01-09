@@ -1,74 +1,13 @@
-"""
-Flask Application - Main entry point for the backend.
-
-This file creates and configures the Flask application,
-initializes the database, and registers all routes.
-"""
 from flask import Flask
-from flask_cors import CORS
-from flask_migrate import Migrate
-from config import Config
-from models import db
-from routes.auth import auth_bp
-from routes.protected_routes import protected_bp
-from routes.suppliers import suppliers_bp
+from dotenv import load_dotenv
+import os
 
+# Import the app factory and db from __init__.py
+from . import create_app, db  # relative import since __init__.py is in the same package
 
-def create_app():
-    """Application factory function"""
-    app = Flask(__name__)
+load_dotenv()
 
-    #Load config from config
-    app.config.from_object(Config)
-    
-    #intialise SQLAlchemy with this app
-    db.init_app(app)
+app = create_app()
 
-    #Initialize Flask-Migrate for database migrations
-    #This replaces db.create_all() with a migration-based approach
-    migrate = Migrate(app, db)
-
-    #Enable CORS for all routes
-    #Allows frontend to call the API
-    #restrinct specific origins
-    CORS(app)
-
-    #Register Blueprints
-    #All routes in auth_bp are now accessible
-
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(protected_bp)
-    app.register_blueprint(suppliers_bp)
-    #REGISTER FUTURE BLUEPRINTS HERE
-
-    #Define root route
-    @app.route('/')
-    def index():
-        #we do a health check here to confirm the app is running
-        return{
-            'message': 'Geo-Verified Vendor Pay API is up and running',
-            'status': 'active and running',
-            'version': '1.0.0'
-        }
-    
-    return app
-
-if __name__ == '__main__':
-    """Runs the flask application only when python app.py and not when imported by other modules
-
-      Development server settings:
-    - debug=True: Auto-reload on code changes, detailed error pages
-    - port=5000: Default Flask port
-    - host='0.0.0.0': Accept connections from any IP (for Docker, VMs)
-    
-    """
-
-    #create the app
-    app = create_app()
-
-    #run the development server 
-    app.run(
-        debug=True, 
-        host='0.0.0.0',
-        port=5000
-    )
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
