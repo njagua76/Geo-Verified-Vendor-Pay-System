@@ -1,0 +1,117 @@
+/* Full page centering */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #b8c1db;
+  font-family: "Inter", sans-serif;
+}
+
+.welcome-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Message above form */
+.welcome-message {
+  font-size: 1.5rem;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* Limit the form size and center content */
+.login-form {
+  background: #0fe2d4;
+  width: 100%;
+  max-width: 400px; /* Small, controlled width */
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.login-form h1 {
+  font-size: 1.75rem;
+  color: #007bff;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.login-form label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+/* Inputs */
+.login-form input {
+  height: 45px;          
+  padding: 0 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  margin-bottom: 1.5rem; 
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+/* Button */
+.login-form button {
+  height: 48px;
+  width: 100%;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.login-form button:hover {
+  background: #0056b3;
+}
+
+.login-form button:disabled {
+  background: #7baeff;
+  cursor: not-allowed;
+}
+
+/* Error */
+.error {
+  color: #dc3545;
+  background: #f8d7da;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Fade-in animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fade-in 1s ease forwards;
+}

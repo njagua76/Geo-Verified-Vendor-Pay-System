@@ -1,10 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Geo-Verified Vendor Pay System - .gitignore
 
 # ============================================
 # SECURITY & SECRETS (NEVER COMMIT)
 # ============================================
-.env
+
 .env.local
+.env.render
 .env.*.local
 *.pem
 *.key
