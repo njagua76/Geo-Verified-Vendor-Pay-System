@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 export const Login = () => {
   const navigate = useNavigate();
-  const { login, isLoggedIn } = useAuth();
+  const { login, isLoggedIn, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -13,12 +13,17 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
 
-  // Redirect if already logged in
+  // Redirect if already logged in - based on user role
   useEffect(() => {
-    if (isLoggedIn) {
-      navigate('/dashboard');
+    if (isLoggedIn && user) {
+      const userRole = user?.role || user?.role_name;
+      if (userRole === 'Admin') {
+        navigate('/dashboard', { replace: true });
+      } else if (userRole === 'Field Agent') {
+        navigate('/verify', { replace: true });
+      }
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, user, navigate]);
 
   // Clear form on mount (in case coming from logout)
   useEffect(() => {
