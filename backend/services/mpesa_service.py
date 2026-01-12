@@ -24,7 +24,7 @@ import os
 import time
 from datetime import datetime
 from flask import current_app
-from ..models import db, TransactionLog, Supplier
+from models import db, TransactionLog, Supplier
 
 
 class MpesaService:

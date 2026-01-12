@@ -9,7 +9,7 @@ Provides reusable functions for:
 
 import jwt
 from flask import request
-from ..config import Config
+from config import Config
 
 
 def get_token_from_header():
