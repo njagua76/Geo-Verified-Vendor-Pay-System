@@ -9,7 +9,7 @@ from models import db, Supplier
 from decorators import role_required
 import re
 
-suppliers_bp = Blueprint('suppliers', __name__, url_prefix='/api/suppliers')
+suppliers_bp = Blueprint('suppliers', __name__)
 
 # ===============================
 # CREATE SUPPLIER
