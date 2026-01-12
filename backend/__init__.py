@@ -18,13 +18,22 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "supersecretkey")
 
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
     db.init_app(app)
     migrate.init_app(app, db)
 
     # Register routes
+    from .routes.auth import auth_bp
     from .routes.admin_routes import admin_bp
-    app.register_blueprint(admin_bp, url_prefix="/api")
+    from .routes.protected_routes import protected_bp
+    from .routes.suppliers import suppliers_bp
+    from .routes.location_verification import location_bp
+    
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(protected_bp, url_prefix="/api")
+    app.register_blueprint(suppliers_bp, url_prefix="/api/suppliers")
+    app.register_blueprint(location_bp, url_prefix="/api/location")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
 
     # Register models so Flask-Migrate sees them
     from .models.transaction_log import TransactionLog  # file must be named transaction_log.py
