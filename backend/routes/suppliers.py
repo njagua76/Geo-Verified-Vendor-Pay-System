@@ -12,7 +12,7 @@ from ..decorators import role_required
 from ..services.mpesa_service import initiate_payment, process_mpesa_callback
 import re
 
-suppliers_bp = Blueprint('suppliers', __name__, url_prefix='/api/suppliers')
+suppliers_bp = Blueprint('suppliers', __name__)
 
 # ===============================
 # GET ALL SUPPLIERS (PUBLIC)

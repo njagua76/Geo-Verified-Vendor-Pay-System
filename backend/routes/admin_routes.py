@@ -6,7 +6,7 @@ from ..models.user import User
 from ..models.role import Role
 from .. import db
 
-admin_bp = Blueprint("admin_bp", __name__, url_prefix='/api/admin')
+admin_bp = Blueprint("admin_bp", __name__)
 
 
 @admin_bp.route("/dashboard", methods=["GET"])

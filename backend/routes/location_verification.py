@@ -7,7 +7,7 @@ from models import db, Supplier
 from decorators import role_required
 from utils.geoutils import haversine_distance, is_within_radius
 
-location_bp = Blueprint('location', __name__, url_prefix='/api')
+location_bp = Blueprint('location', __name__)
 
 @location_bp.route('/verify-location', methods=['POST'])
 @role_required('Field Agent')
