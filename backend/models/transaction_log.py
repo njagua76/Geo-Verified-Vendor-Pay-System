@@ -1,5 +1,5 @@
 from datetime import datetime
-from .. import db  # import the db from __init__.py
+from . import db  # import the db from models/__init__.py
 
 class TransactionLog(db.Model):
     __tablename__ = "transactions_log"
