@@ -12,6 +12,12 @@ class Config:
     """Configuration class that loads settings from environment variables."""
     
     # ═══════════════════════════════════════════════════════════
+    # ENVIRONMENT DETECTION (Define first for use elsewhere)
+    # ═══════════════════════════════════════════════════════════
+    FLASK_ENV = os.getenv('FLASK_ENV', 'development')
+    DEBUG = FLASK_ENV == 'development'
+    
+    # ═══════════════════════════════════════════════════════════
     # DATABASE CONFIGURATION
     # ═══════════════════════════════════════════════════════════
     
@@ -35,8 +41,12 @@ class Config:
 
     JWT_SECRET_KEY = os.getenv(
         'JWT_SECRET_KEY',
-        'dev-secret-key-CHANGE-IN-PRODUCTION'  # Using this only for development
+        'dev-secret-key-CHANGE-IN-PRODUCTION'  # MUST be set in production via .env
     )
+    
+    # Alert if using development secret in production
+    if DEBUG and JWT_SECRET_KEY == 'dev-secret-key-CHANGE-IN-PRODUCTION':
+        print("⚠️  WARNING: Using development JWT secret key. Set JWT_SECRET_KEY in .env for production.")
     
     # How long before a JWT expires
     # timedelta(hours=24) = 24 hours = 1 day
@@ -73,6 +83,16 @@ class Config:
     # Flask secret key (for session cookies, CSRF tokens)
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-flask-secret-CHANGE-ME')
     
-
-    DEBUG = os.getenv('FLASK_ENV', 'development') == 'development'
+    # CORS origins
+    ALLOWED_ORIGINS = os.getenv(
+        'ALLOWED_ORIGINS',
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5000,http://127.0.0.1:5000'
+    ).split(',')
+    
+    # Validation for production
+    if not DEBUG and JWT_SECRET_KEY == 'dev-secret-key-CHANGE-IN-PRODUCTION':
+        raise ValueError(
+            "❌ FATAL: JWT_SECRET_KEY must be changed from development default in production. "
+            "Set JWT_SECRET_KEY in .env file."
+        )
 
