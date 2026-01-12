@@ -1,0 +1,34 @@
+/* src/components/FieldAgent/Dashboard.css */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f4f6f8;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem 2rem;
+}
+
+.top-navbar {
+  background: white;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 1rem;
+}
+
+.content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.map-placeholder {
+  margin-top: 2rem;
+  background: #e0e0e0;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}

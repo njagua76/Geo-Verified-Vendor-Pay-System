@@ -3,7 +3,7 @@ Supplier Model - Stores vendor/supplier information.
 """
 
 from datetime import datetime
-from models import db  # Import db from models package
+from . import db  # Import db from models package
 
 class Supplier(db.Model):
     """Supplier database model"""
