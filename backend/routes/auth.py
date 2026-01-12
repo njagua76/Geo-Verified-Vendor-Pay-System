@@ -4,12 +4,10 @@ from ..validators.input_validator import validate_email, validate_password
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/login', methods=['POST', 'OPTIONS'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
-
-    # ✅ Handle CORS preflight
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
+    # Flask-CORS handles OPTIONS preflight requests automatically
+    # No manual handling needed - this ensures proper 2xx status for preflight
 
     if not request.is_json:
         return jsonify({

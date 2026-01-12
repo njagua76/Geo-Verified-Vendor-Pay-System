@@ -27,16 +27,9 @@ def create_app():
     Migrate(app, db)
 
     # -------------------------------
-    # ✅ CORS CONFIG - Allow all origins for development
+    # CORS CONFIG - Allow all origins for development
     # -------------------------------
-    CORS(
-        app,
-        origins=["*"],  # Allow all origins for development
-        supports_credentials=True,
-        allow_headers=["Content-Type", "Authorization"],
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        max_age=86400
-    )
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
