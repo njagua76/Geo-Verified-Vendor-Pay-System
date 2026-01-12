@@ -5,11 +5,12 @@ Flask Application - Main entry point for the backend.
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
-from .config import Config
-from .models import db
-from .routes.auth import auth_bp
-from .routes.protected_routes import protected_bp
-from .routes.suppliers import suppliers_bp
+from config import Config
+from models import db
+from routes.auth import auth_bp
+from routes.protected_routes import protected_bp
+from routes.suppliers import suppliers_bp
+from routes.location_verification import location_bp
 
 
 def create_app():
@@ -41,12 +42,11 @@ def create_app():
         max_age=86400
     )
 
-    # -------------------------------
-    # Register Blueprints
-    # -------------------------------
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(protected_bp, url_prefix="/api")
     app.register_blueprint(suppliers_bp, url_prefix="/api/suppliers")
+    app.register_blueprint(location_bp, url_prefix="/api/location")
 
     # -------------------------------
     # Health Check
