@@ -37,10 +37,10 @@ def create_app():
     #Register Blueprints
     #All routes in auth_bp are now accessible
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(protected_bp)
-    app.register_blueprint(suppliers_bp)
-    app.register_blueprint(location_bp)
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(protected_bp, url_prefix="/api")
+    app.register_blueprint(suppliers_bp, url_prefix="/api/suppliers")
+    app.register_blueprint(location_bp, url_prefix="/api/location")
     #REGISTER FUTURE BLUEPRINTS HERE
 
     #Define root route
