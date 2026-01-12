@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, RefreshCw, CheckCircle2, XCircle, AlertCircle, Building2, MapPin, Zap, Clock } from 'lucide-react';
-import axios from 'axios';
+import { Activity, RefreshCw, CheckCircle2, XCircle, AlertCircle, Building2, MapPin, Zap, Clock, Users } from 'lucide-react';
+import { dashboardAPI, suppliersAPI } from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalFieldAgents: 0,
+    totalAdmins: 0,
+    totalSuppliers: 0,
     totalTransactions: 0,
     successfulTransactions: 0,
     failedTransactions: 0,
-    totalValue: 0,
-    activeSuppliers: 0,
-    activeAgents: 0,
   });
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,54 +30,57 @@ export const Dashboard = () => {
     try {
       setLoading(true);
       setError('');
-      const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-      // Fetch transactions
+      // Fetch dashboard stats from backend
       try {
-        const txnResponse = await axios.get(`${baseURL}/api/transactions-log`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const txns = txnResponse.data || [];
-        setTransactions(txns.slice(0, 10));
-
-        // Calculate stats from transactions
-        const successCount = txns.filter((t) => t.status === 'PAYMENT_SENT').length;
-        const failedCount = txns.filter((t) => t.status === 'VERIFICATION_FAIL' || t.status === 'PAYMENT_FAILED').length;
-        const totalValue = txns.reduce((sum, t) => sum + (t.amount || 0), 0);
-
-        setStats({
-          totalTransactions: txns.length,
-          successfulTransactions: successCount,
-          failedTransactions: failedCount,
-          totalValue: totalValue,
-          activeSuppliers: txns.length > 0 ? Math.ceil(txns.length / 2) : 0,
-          activeAgents: txns.length > 0 ? Math.ceil(txns.length / 3) : 0,
-        });
+        const dashResponse = await dashboardAPI.getAdmin();
+        const dashStats = dashResponse.data.stats || {};
+        setStats((prevStats) => ({
+          ...prevStats,
+          totalUsers: dashStats.total_users || 0,
+          totalFieldAgents: dashStats.total_field_agents || 0,
+          totalAdmins: dashStats.total_admins || 0,
+          totalSuppliers: dashStats.total_suppliers || 0,
+        }));
       } catch (err) {
-        console.log('Transactions fetch error:', err);
-        // Use mock data if API fails
-        setTransactions([
-          { id: 1, supplier_name: 'Hub A', amount: 5000, status: 'PAYMENT_SENT', timestamp: new Date().toISOString(), distance_meters: 15.3 },
-          { id: 2, supplier_name: 'Hub B', amount: 3000, status: 'VERIFICATION_FAIL', timestamp: new Date().toISOString(), distance_meters: 35.5 },
-        ]);
+        console.error('Error fetching dashboard stats:', err);
       }
 
       // Fetch suppliers
       try {
-        const supResponse = await axios.get(`${baseURL}/api/suppliers`, {
+        const supResponse = await suppliersAPI.getAll();
+        const supplierData = supResponse.data.suppliers || supResponse.data || [];
+        setSuppliers(supplierData);
+      } catch (err) {
+        console.log('Suppliers fetch error:', err);
+        setSuppliers([]);
+      }
+
+      // Fetch transactions (optional - when backend endpoint ready)
+      try {
+        const txnResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/transactions-log`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
-        setSuppliers(supResponse.data || []);
+        if (txnResponse.ok) {
+          const txns = await txnResponse.json();
+          const txnArray = Array.isArray(txns) ? txns : txns.transactions || [];
+          setTransactions(txnArray.slice(0, 10));
+
+          // Update transaction stats
+          const successCount = txnArray.filter((t) => t.status === 'PAYMENT_SENT').length;
+          const failedCount = txnArray.filter((t) => t.status === 'VERIFICATION_FAIL' || t.status === 'PAYMENT_FAILED').length;
+
+          setStats((prevStats) => ({
+            ...prevStats,
+            totalTransactions: txnArray.length,
+            successfulTransactions: successCount,
+            failedTransactions: failedCount,
+          }));
+        }
       } catch (err) {
-        console.log('Suppliers fetch error:', err);
-        setSuppliers([
-          { id: 1, name: 'Supplier Hub A', latitude: -1.286389, longitude: 36.817223 },
-          { id: 2, name: 'Supplier Hub B', latitude: -1.300000, longitude: 36.800000 },
-        ]);
+        console.log('Transactions fetch error:', err);
       }
     } catch (err) {
       setError('Failed to load dashboard data. Please try again.');
@@ -201,13 +205,29 @@ export const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {/* Total Transactions */}
+          {/* Total Users */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-semibold tracking-wide">Total Transactions</p>
-                <p className="text-4xl font-bold text-gray-900 mt-3">{stats.totalTransactions}</p>
-                <p className="text-xs text-gray-500 mt-2">All time records</p>
+                <p className="text-gray-600 text-sm font-semibold tracking-wide">Total Users</p>
+                <p className="text-4xl font-bold text-gray-900 mt-3">{stats.totalUsers}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  {stats.totalFieldAgents} agents • {stats.totalAdmins} admins
+                </p>
+              </div>
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Users className="w-7 h-7 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Field Agents */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-semibold tracking-wide">Field Agents</p>
+                <p className="text-4xl font-bold text-blue-600 mt-3">{stats.totalFieldAgents}</p>
+                <p className="text-xs text-gray-500 mt-2">Active verifiers</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Activity className="w-7 h-7 text-blue-600" />
@@ -215,46 +235,32 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Successful Transactions */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-semibold tracking-wide">Successful</p>
-                <p className="text-4xl font-bold text-emerald-600 mt-3">{stats.successfulTransactions}</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {stats.totalTransactions > 0 ? ((stats.successfulTransactions / stats.totalTransactions) * 100).toFixed(1) : 0}% success rate
-                </p>
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <CheckCircle2 className="w-7 h-7 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Failed Transactions */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-semibold tracking-wide">Failed</p>
-                <p className="text-4xl font-bold text-red-600 mt-3">{stats.failedTransactions}</p>
-                <p className="text-xs text-gray-500 mt-2">Verification failures</p>
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <XCircle className="w-7 h-7 text-red-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Active Suppliers */}
+          {/* Suppliers */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-semibold tracking-wide">Suppliers</p>
-                <p className="text-4xl font-bold text-orange-600 mt-3">{suppliers.length}</p>
-                <p className="text-xs text-gray-500 mt-2">Active locations</p>
+                <p className="text-4xl font-bold text-orange-600 mt-3">{stats.totalSuppliers}</p>
+                <p className="text-xs text-gray-500 mt-2">Active hubs</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Building2 className="w-7 h-7 text-orange-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Transactions */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-semibold tracking-wide">Transactions</p>
+                <p className="text-4xl font-bold text-emerald-600 mt-3">{stats.totalTransactions}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  {stats.totalTransactions > 0 ? ((stats.successfulTransactions / stats.totalTransactions) * 100).toFixed(1) : 0}% success
+                </p>
+              </div>
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <CheckCircle2 className="w-7 h-7 text-emerald-600" />
               </div>
             </div>
           </div>

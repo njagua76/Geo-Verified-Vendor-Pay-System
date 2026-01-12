@@ -53,4 +53,28 @@ export const profileAPI = {
   getProfile: () => apiClient.get('/api/profile'),
 };
 
+export const suppliersAPI = {
+  getAll: () => apiClient.get('/api/suppliers'),
+  getById: (id) => apiClient.get(`/api/suppliers/${id}`),
+  create: (data) => apiClient.post('/api/suppliers', data),
+  update: (id, data) => apiClient.put(`/api/suppliers/${id}`, data),
+  delete: (id) => apiClient.delete(`/api/suppliers/${id}`),
+};
+
+export const verificationAPI = {
+  verifyLocation: (userLat, userLon, supplierId) =>
+    apiClient.post('/api/verify-location', {
+      user_lat: userLat,
+      user_lon: userLon,
+      supplier_id: supplierId,
+    }),
+  
+  getTransactionLogs: () => apiClient.get('/api/transactions-log'),
+};
+
+export const usersAPI = {
+  getAll: () => apiClient.get('/api/users'),
+  getByRole: (roleName) => apiClient.get(`/api/users/${roleName}`),
+};
+
 export default apiClient;

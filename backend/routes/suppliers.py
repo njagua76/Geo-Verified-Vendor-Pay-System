@@ -1,7 +1,8 @@
 """
 Supplier Routes - CRUD operations for supplier management.
 
-Only accessible by Admin users.
+Public GET endpoints are accessible to all authenticated users.
+Create/Update/Delete operations are Admin-only.
 """
 
 from flask import Blueprint, request, jsonify
@@ -10,6 +11,22 @@ from decorators import role_required
 import re
 
 suppliers_bp = Blueprint('suppliers', __name__, url_prefix='/api/suppliers')
+
+# ===============================
+# GET ALL SUPPLIERS (PUBLIC)
+# ===============================
+
+@suppliers_bp.route('', methods=['GET'])
+def get_all_suppliers():
+    """Get all suppliers (Public - no authentication needed)."""
+    try:
+        suppliers = Supplier.query.all()
+        return jsonify({
+            'suppliers': [supplier.to_dict() for supplier in suppliers],
+            'count': len(suppliers)
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ===============================
 # CREATE SUPPLIER
@@ -78,30 +95,12 @@ def create_supplier():
         return jsonify({'error': str(e)}), 500
 
 # ===============================
-# GET ALL SUPPLIERS
-# ===============================
-
-@suppliers_bp.route('', methods=['GET'])
-@role_required('Admin')
-def get_suppliers():
-    """Get all suppliers (Admin only)."""
-    try:
-        suppliers = Supplier.query.all()
-        return jsonify({
-            'suppliers': [supplier.to_dict() for supplier in suppliers],
-            'count': len(suppliers)
-        }), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# ===============================
-# GET SINGLE SUPPLIER
+# GET SINGLE SUPPLIER (PUBLIC)
 # ===============================
 
 @suppliers_bp.route('/<int:supplier_id>', methods=['GET'])
-@role_required('Admin')
-def get_supplier(supplier_id):
-    """Get a single supplier by ID (Admin only)."""
+def get_supplier_public(supplier_id):
+    """Get a single supplier by ID (Public - no authentication needed)."""
     try:
         supplier = Supplier.query.get(supplier_id)
         if not supplier:
