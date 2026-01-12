@@ -1,39 +1,46 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./components/Admin/Dashboard";
-import Users from "./components/Admin/Users";
-import Suppliers from "./components/Admin/Suppliers";
-import Transactions from "./components/Admin/Transactions";
-import Welcome from "./components/Welcome";   // << Correct import
-import { useAuth } from "./context/AuthContext";
+import './index.css';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+
+// Pages
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Verify from './pages/Verify';
 
 function App() {
-  const { user, loading } = useAuth();
-
-  if (loading) return <div>Loading...</div>;
-
   return (
-    <Routes>
-      {/* PUBLIC ROUTE */}
-      <Route path="/" element={<Welcome />} />
+    <AuthProvider>
+      <Routes>
+        {/* Public Routes - Login is the landing page */}
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
 
-      {/* PROTECTED ADMIN ROUTES */}
-      {user ? (
-        <>
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/users" element={<Users />} />
-          <Route path="/admin/suppliers" element={<Suppliers />} />
-          <Route path="/admin/transactions" element={<Transactions />} />
-        </>
-      ) : (
-        <>
-          {/* Redirect all admin routes to login if not logged in */}
-          <Route path="/admin/*" element={<Navigate to="/" replace />} />
-        </>
-      )}
+        {/* Protected Admin Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* CATCH ALL → send to login */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Protected Field Agent Routes */}
+        <Route
+          path="/verify"
+          element={
+            <ProtectedRoute allowedRoles={['Field Agent']}>
+              <Verify />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch all - redirect to login */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 

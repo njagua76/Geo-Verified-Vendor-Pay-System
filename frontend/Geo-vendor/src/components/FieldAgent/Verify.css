@@ -1,0 +1,99 @@
+.verify-container {
+  display: flex;
+  height: 90vh;
+  background: #f4f6f8;
+}
+
+/* Sidebar */
+.verify-sidebar {
+  width: 300px;
+  background: #005eff;
+  color: white;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.verify-sidebar h2 {
+  margin-bottom: 1rem;
+}
+
+.verify-sidebar ul {
+  list-style: none;
+}
+
+.verify-sidebar li {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.verify-sidebar li.selected,
+.verify-sidebar li:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.verify-sidebar h4 {
+  margin-bottom: 0.3rem;
+}
+
+.verify-sidebar p {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.verify-sidebar .buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.verify-sidebar button {
+  flex: 1;
+  padding: 4px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.verify-sidebar button:first-child {
+  background: #28a745;
+}
+
+.verify-sidebar button:first-child:hover {
+  background: #1e7e34;
+}
+
+.verify-sidebar button:last-child {
+  background: #dc3545;
+}
+
+.verify-sidebar button:last-child:hover {
+  background: #a71d2a;
+}
+
+/* Map */
+.verify-map {
+  flex: 1;
+  height: 100%;
+}
+
+/* src/components/FieldAgent/Verify.css */
+.verify-container {
+  padding: 2rem;
+  background: #f4f6f8;
+  min-height: 80vh;
+}
+
+.verify-container h1 {
+  margin-bottom: 1rem;
+}
+
+.verify-container p {
+  color: #555;
+}
+
