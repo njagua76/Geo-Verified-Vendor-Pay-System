@@ -4,7 +4,7 @@ User Model - User accounts with secure password storage.
 Handles authentication data for all users (Admins and Field Agents).
 """
 
-from models import db
+from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):

@@ -5,11 +5,11 @@ Flask Application - Main entry point for the backend.
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
-from config import Config
-from models import db
-from routes.auth import auth_bp
-from routes.protected_routes import protected_bp
-from routes.suppliers import suppliers_bp
+from .config import Config
+from .models import db
+from .routes.auth import auth_bp
+from .routes.protected_routes import protected_bp
+from .routes.suppliers import suppliers_bp
 
 
 def create_app():

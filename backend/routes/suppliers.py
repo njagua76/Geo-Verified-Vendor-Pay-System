@@ -6,8 +6,8 @@ Create/Update/Delete operations are Admin-only.
 """
 
 from flask import Blueprint, request, jsonify
-from models import db, Supplier
-from decorators import role_required
+from ..models import db, Supplier
+from ..decorators import role_required
 import re
 
 suppliers_bp = Blueprint('suppliers', __name__, url_prefix='/api/suppliers')

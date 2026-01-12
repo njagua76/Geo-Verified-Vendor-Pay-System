@@ -6,11 +6,11 @@ Creates:
 - Test users with known passwords for testing
 """
 
-from app import create_app
-from models import db
-from models.role import Role
-from models.user import User
-from models.supplier import Supplier
+from backend.app import create_app
+from backend.models import db
+from backend.models.role import Role
+from backend.models.user import User
+from backend.models.supplier import Supplier
 
 
 def seed_database():

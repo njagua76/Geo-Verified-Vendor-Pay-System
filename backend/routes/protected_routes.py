@@ -6,9 +6,9 @@ Includes dashboard stats, user management, and verification endpoints.
 """
 
 from flask import Blueprint, jsonify
-from decorators.role_decorator import role_required
-from models import db, User, Supplier
-from models.role import Role
+from ..decorators.role_decorator import role_required
+from ..models import db, User, Supplier
+from ..models.role import Role
 
 
 protected_bp = Blueprint('protected', __name__)
