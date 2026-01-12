@@ -59,6 +59,11 @@ export const suppliersAPI = {
   create: (data) => apiClient.post('/api/suppliers', data),
   update: (id, data) => apiClient.put(`/api/suppliers/${id}`, data),
   delete: (id) => apiClient.delete(`/api/suppliers/${id}`),
+  initiatePayment: (data) => apiClient.post('/api/suppliers/payment', data),
+  getPaymentStatus: (checkoutRequestId) => 
+    apiClient.get(`/api/suppliers/payment/status/${checkoutRequestId}`),
+  getTransactions: (params = {}) => 
+    apiClient.get('/api/suppliers/transactions', { params }),
 };
 
 export const verificationAPI = {
@@ -75,6 +80,14 @@ export const verificationAPI = {
 export const usersAPI = {
   getAll: () => apiClient.get('/api/users'),
   getByRole: (roleName) => apiClient.get(`/api/users/${roleName}`),
+};
+
+export const adminAPI = {
+  getDashboard: () => apiClient.get('/api/admin/dashboard'),
+  getTransactions: (params = {}) => apiClient.get('/api/admin/transactions', { params }),
+  getTransactionDetail: (transactionId) => apiClient.get(`/api/admin/transactions/${transactionId}`),
+  getSuppliers: () => apiClient.get('/api/admin/suppliers'),
+  getUsers: () => apiClient.get('/api/admin/users'),
 };
 
 export default apiClient;

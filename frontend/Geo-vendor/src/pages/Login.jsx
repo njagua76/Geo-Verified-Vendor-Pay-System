@@ -218,55 +218,7 @@ export const Login = () => {
                 )}
               </button>
             </form>
-
-            {/* Divider */}
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-gray-500 font-medium">Test Credentials</span>
-              </div>
-            </div>
-
-            {/* Test Credentials */}
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@example.com');
-                  setPassword('admin123');
-                  setError('');
-                  setSuccess('');
-                }}
-                disabled={loading}
-                className="w-full p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:from-blue-100 hover:to-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <p className="text-xs font-bold text-blue-900 group-hover:text-blue-950">👨‍💼 ADMIN</p>
-                <p className="text-xs text-blue-700 mt-1 group-hover:text-blue-800">admin@example.com / admin123</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('agent@example.com');
-                  setPassword('agent123');
-                  setError('');
-                  setSuccess('');
-                }}
-                disabled={loading}
-                className="w-full p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 hover:from-emerald-100 hover:to-emerald-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <p className="text-xs font-bold text-emerald-900 group-hover:text-emerald-950">🕵️ FIELD AGENT</p>
-                <p className="text-xs text-emerald-700 mt-1 group-hover:text-emerald-800">agent@example.com / agent123</p>
-              </button>
-            </div>
           </div>
-        </div>
-
-        {/* Footer Info */}
-        <div className="mt-8 text-center text-xs text-gray-500">
-          <p>🔒 Secure login with JWT authentication</p>
-          <p className="mt-1">Your data is encrypted and protected</p>
         </div>
       </div>
 

@@ -6,6 +6,13 @@ Creates:
 - Test users with known passwords for testing
 """
 
+import sys
+import os
+
+# Add parent directory to path for relative imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Now we can import from the package
 from backend.app import create_app
 from backend.models import db
 from backend.models.role import Role
@@ -28,6 +35,7 @@ def seed_database():
         print("  → Clearing existing data...")
         User.query.delete()
         Role.query.delete()
+        Supplier.query.delete()  # Clear suppliers too
         db.session.commit()
         
         # ═══════════════════════════════════════════════════════════
@@ -139,6 +147,16 @@ def seed_database():
                 'contact_person': 'David Mwangi',
                 'contact_email': 'david@ruiru-mugutha.com',
                 'address': 'Near Tumaini Spire Academy, Mugutha, Ruiru'
+            },
+            {
+                'name': 'Executive Building Mugutha',
+                'supplier_id': 'SUP007',
+                'latitude': -1.1231552725673162,
+                'longitude': 36.963508053527995,
+                'mpesa_phone_number': '+254722789012',
+                'contact_person': 'Henry Kipchoge',
+                'contact_email': 'henry@executive-mugutha.com',
+                'address': 'Executive Building, Mugutha, Ruiru'
             }
         ]
         

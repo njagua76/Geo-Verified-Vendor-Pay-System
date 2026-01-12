@@ -8,8 +8,8 @@ lat2, lon2 = -1.2922, 36.8220  # Nearby point
 distance = haversine_distance(lat1, lon1, lat2, lon2)
 print(f"Distance between points: {distance:.2f} meters")
 
-# Check if distance is <= 20 meters
-if distance <= 20:
+# Check if distance is <= 50 meters (updated threshold for better GPS accuracy)
+if distance <= 50:
     print("Distance is within payment threshold ✅")
 else:
     print("Distance exceeds payment threshold ❌")

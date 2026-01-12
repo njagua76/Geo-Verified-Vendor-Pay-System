@@ -13,7 +13,7 @@ export const PaymentVerification = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(true);
 
-  const DISTANCE_THRESHOLD = 20; // 20 meters as per requirements
+  const DISTANCE_THRESHOLD = 20; // 20 meters threshold for GPS accuracy
 
   useEffect(() => {
     fetchSuppliers();
@@ -37,12 +37,12 @@ export const PaymentVerification = () => {
 
   const fetchRecentTransactions = async () => {
     try {
-      const response = await verificationAPI.getTransactionLogs();
+      const response = await suppliersAPI.getTransactions({ limit: 3 });
       const txnData = Array.isArray(response.data) ? response.data : response.data?.transactions || [];
       setRecentTransactions(txnData.slice(0, 3));
     } catch (err) {
       console.error('Error fetching transactions:', err);
-      // This endpoint might not exist yet, so we don't fail
+      // Fallback to empty array if endpoint fails
     }
   };
 
@@ -265,11 +265,27 @@ export const PaymentVerification = () => {
             </button>
 
             {location && (
-              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-700 space-y-2">
-                <p><span className="font-medium">Latitude:</span> {location.latitude.toFixed(6)}</p>
-                <p><span className="font-medium">Longitude:</span> {location.longitude.toFixed(6)}</p>
-                {distance !== null && (
-                  <p className="font-medium text-blue-600">Distance: {Math.round(distance)}m</p>
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-700 space-y-2">
+                  <p><span className="font-medium">Latitude:</span> {location.latitude.toFixed(6)}</p>
+                  <p><span className="font-medium">Longitude:</span> {location.longitude.toFixed(6)}</p>
+                  {distance !== null && (
+                    <p className="font-medium text-blue-600">Distance: {Math.round(distance)}m</p>
+                  )}
+                </div>
+
+                {/* Map View */}
+                {selectedSupplier && (
+                  <div className="w-full h-64 rounded-lg overflow-hidden border border-gray-300 shadow-md">
+                    <iframe
+                      title="Location Map"
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(location.longitude, suppliers.find((s) => s.id === parseInt(selectedSupplier))?.longitude) - 0.001},${Math.min(location.latitude, suppliers.find((s) => s.id === parseInt(selectedSupplier))?.latitude) - 0.001},${Math.max(location.longitude, suppliers.find((s) => s.id === parseInt(selectedSupplier))?.longitude) + 0.001},${Math.max(location.latitude, suppliers.find((s) => s.id === parseInt(selectedSupplier))?.latitude) + 0.001}&layer=mapnik`}
+                      style={{ border: 0 }}
+                    ></iframe>
+                  </div>
                 )}
               </div>
             )}

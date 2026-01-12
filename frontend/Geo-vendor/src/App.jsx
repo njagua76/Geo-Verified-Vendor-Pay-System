@@ -8,6 +8,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Verify from './pages/Verify';
+import Payment from './pages/Payment';
 
 function App() {
   return (
@@ -33,6 +34,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Field Agent']}>
               <Verify />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payment"
+          element={
+            <ProtectedRoute allowedRoles={['Field Agent']}>
+              <Payment />
             </ProtectedRoute>
           }
         />

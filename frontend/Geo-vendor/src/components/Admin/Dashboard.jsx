@@ -1,23 +1,59 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaUsers, FaStore, FaExchangeAlt, FaSignOutAlt } from "react-icons/fa";
+import { FaUsers, FaStore, FaExchangeAlt, FaSignOutAlt, FaCheckCircle, FaClock, FaTimesCircle } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
+import { adminAPI } from "../../api/apiClient";
 
 const Dashboard = () => {
   const { token, logout } = useAuth();
-  const [data, setData] = useState({ total_users: 0, total_suppliers: 0, total_transactions: 0 });
+  const [data, setData] = useState({ 
+    total_users: 0, 
+    total_suppliers: 0, 
+    total_transactions: 0,
+    success_count: 0,
+    pending_count: 0,
+    failed_count: 0,
+    recent_transactions: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("/admin/dashboard", {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await adminAPI.getDashboard();
+        setData(response.data.stats || {
+          total_users: response.data.data?.total_users || 0,
+          total_suppliers: response.data.data?.total_suppliers || 0,
+          total_transactions: response.data.data?.total_transactions || 0,
+          success_count: response.data.data?.success_count || 0,
+          pending_count: response.data.data?.pending_count || 0,
+          failed_count: response.data.data?.failed_count || 0,
+          recent_transactions: response.data.data?.recent_transactions || 0
         });
-        setData(res.data.data);
       } catch (err) {
-        console.error(err);
-        setData({ total_users: 0, total_suppliers: 0, total_transactions: 0 });
+        console.error("Error fetching dashboard data:", err);
+        // Fallback to direct axios call if API wrapper fails
+        try {
+          const res = await axios.get("/api/admin/dashboard", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setData(res.data.stats || {
+            total_users: res.data.data?.total_users || 0,
+            total_suppliers: res.data.data?.total_suppliers || 0,
+            total_transactions: res.data.data?.total_transactions || 0
+          });
+        } catch (fallbackErr) {
+          console.error("Fallback also failed:", fallbackErr);
+          setData({ 
+            total_users: 0, 
+            total_suppliers: 0, 
+            total_transactions: 0,
+            success_count: 0,
+            pending_count: 0,
+            failed_count: 0,
+            recent_transactions: 0
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -128,13 +164,58 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Chart Placeholder */}
-          <div className="bg-white rounded-xl shadow-md p-8 text-center border border-gray-200">
-            <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
-              <span className="text-2xl">📈</span>
+          {/* Transaction Status Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Success Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Successful</p>
+                  <p className="text-3xl font-bold text-green-600 mt-2">{loading ? "-" : data.success_count}</p>
+                </div>
+                <div className="bg-green-100 p-4 rounded-full">
+                  <FaCheckCircle className="text-green-600 text-2xl" />
+                </div>
+              </div>
             </div>
-            <p className="text-gray-600 font-medium">Charts & Analytics</p>
-            <p className="text-gray-500 text-sm mt-2">Advanced metrics and visualizations coming soon...</p>
+
+            {/* Pending Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Pending</p>
+                  <p className="text-3xl font-bold text-yellow-600 mt-2">{loading ? "-" : data.pending_count}</p>
+                </div>
+                <div className="bg-yellow-100 p-4 rounded-full">
+                  <FaClock className="text-yellow-600 text-2xl" />
+                </div>
+              </div>
+            </div>
+
+            {/* Failed Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium uppercase tracking-wide">Failed</p>
+                  <p className="text-3xl font-bold text-red-600 mt-2">{loading ? "-" : data.failed_count}</p>
+                </div>
+                <div className="bg-red-100 p-4 rounded-full">
+                  <FaTimesCircle className="text-red-600 text-2xl" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity Card */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+              <div>
+                <p className="text-gray-600 text-sm">Transactions in Last 7 Days</p>
+                <p className="text-2xl font-bold text-blue-600">{loading ? "-" : data.recent_transactions}</p>
+              </div>
+              <FaExchangeAlt className="text-blue-400 text-3xl" />
+            </div>
           </div>
         </main>
       </div>
@@ -143,3 +224,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
