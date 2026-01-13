@@ -4,7 +4,7 @@ User Model - User accounts with secure password storage.
 Handles authentication data for all users (Admins and Field Agents).
 """
 
-from models import db
+from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
@@ -14,7 +14,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
-
+    
+    # Relationship is defined in Role model with backref='role'
 
     def set_password(self, password):
         """

@@ -1,9 +1,7 @@
 """
 Flask Application - Main entry point for the backend.
-
-This file creates and configures the Flask application,
-initializes the database, and registers all routes.
 """
+
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -13,64 +11,52 @@ from routes.auth import auth_bp
 from routes.protected_routes import protected_bp
 from routes.suppliers import suppliers_bp
 from routes.location_verification import location_bp
+from routes.admin_routes import admin_bp
 
 
 def create_app():
-    """Application factory function"""
     app = Flask(__name__)
 
-    #Load config from config
+    # Load configuration
     app.config.from_object(Config)
-    
-    #intialise SQLAlchemy with this app
+
+    # Initialize database
     db.init_app(app)
 
-    #Initialize Flask-Migrate for database migrations
-    #This replaces db.create_all() with a migration-based approach
-    migrate = Migrate(app, db)
+    # Initialize migrations
+    Migrate(app, db)
 
-    #Enable CORS for all routes
-    #Allows frontend to call the API
-    #restrinct specific origins
-    CORS(app)
+    # -------------------------------
+    # CORS CONFIG - Allow all origins for development
+    # -------------------------------
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
-    #Register Blueprints
-    #All routes in auth_bp are now accessible
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(protected_bp, url_prefix="/api")
     app.register_blueprint(suppliers_bp, url_prefix="/api/suppliers")
     app.register_blueprint(location_bp, url_prefix="/api/location")
-    #REGISTER FUTURE BLUEPRINTS HERE
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
 
-    #Define root route
-    @app.route('/')
+    # -------------------------------
+    # Health Check
+    # -------------------------------
+    @app.route("/")
     def index():
-        #we do a health check here to confirm the app is running
-        return{
-            'message': 'Geo-Verified Vendor Pay API is up and running',
-            'status': 'active and running',
-            'version': '1.0.0'
+        return {
+            "message": "Geo-Verified Vendor Pay API is up and running",
+            "status": "active",
+            "version": "1.0.0"
         }
-    
+
     return app
 
-if __name__ == '__main__':
-    """Runs the flask application only when python app.py and not when imported by other modules
 
-      Development server settings:
-    - debug=True: Auto-reload on code changes, detailed error pages
-    - port=5000: Default Flask port
-    - host='0.0.0.0': Accept connections from any IP (for Docker, VMs)
-    
-    """
-
-    #create the app
+if __name__ == "__main__":
     app = create_app()
-
-    #run the development server 
     app.run(
-        debug=True, 
-        host='0.0.0.0',
-        port=5000
+        host="0.0.0.0",
+        port=5000,
+        debug=False
     )
+

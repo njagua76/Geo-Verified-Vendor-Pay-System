@@ -1,9 +1,9 @@
 """
-WSGI entry point for Vercel deployment
+WSGI entry point for Render deployment
 """
 from app import create_app
 
 # Create the Flask app instance
 app = create_app()
 
-# Vercel will use this 'app' object
+# Used by both Render and Vercel

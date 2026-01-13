@@ -6,10 +6,18 @@ Creates:
 - Test users with known passwords for testing
 """
 
-from app import create_app
-from models import db
-from models.role import Role
-from models.user import User
+import sys
+import os
+
+# Add parent directory to path for relative imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Now we can import from the package
+from backend.app import create_app
+from backend.models import db
+from backend.models.role import Role
+from backend.models.user import User
+from backend.models.supplier import Supplier
 
 
 def seed_database():
@@ -27,6 +35,7 @@ def seed_database():
         print("  → Clearing existing data...")
         User.query.delete()
         Role.query.delete()
+        Supplier.query.delete()  # Clear suppliers too
         db.session.commit()
         
         # ═══════════════════════════════════════════════════════════
@@ -73,12 +82,101 @@ def seed_database():
         print(f"    ✅ Created user: {agent_user.email} (Role: {agent_user.role.role_name})")
         
         # ═══════════════════════════════════════════════════════════
-        # Step 4: Verify Data
+        # Step 4: Create Test Suppliers
+        # ═══════════════════════════════════════════════════════════
+        
+        print("  → Creating test suppliers...")
+        
+        suppliers_data = [
+            {
+                'name': 'Nairobi Central Hub',
+                'supplier_id': 'SUP001',
+                'latitude': -1.2921,
+                'longitude': 36.8219,
+                'mpesa_phone_number': '+254722123456',
+                'contact_person': 'John Kamau',
+                'contact_email': 'john@nairobi-hub.com',
+                'address': '123 Kenyatta Avenue, Nairobi'
+            },
+            {
+                'name': 'Westlands Distribution Center',
+                'supplier_id': 'SUP002',
+                'latitude': -1.2611,
+                'longitude': 36.8028,
+                'mpesa_phone_number': '+254722234567',
+                'contact_person': 'Sarah Kipchoge',
+                'contact_email': 'sarah@westlands.com',
+                'address': '456 Westlands Road, Nairobi'
+            },
+            {
+                'name': 'Karen Logistics Point',
+                'supplier_id': 'SUP003',
+                'latitude': -1.3089,
+                'longitude': 36.7623,
+                'mpesa_phone_number': '+254722345678',
+                'contact_person': 'Peter Mwangi',
+                'contact_email': 'peter@karen-logistics.com',
+                'address': '789 Karen Road, Nairobi'
+            },
+            {
+                'name': 'Upper Hill Operations',
+                'supplier_id': 'SUP004',
+                'latitude': -1.2856,
+                'longitude': 36.7738,
+                'mpesa_phone_number': '+254722456789',
+                'contact_person': 'Grace Omondi',
+                'contact_email': 'grace@upperhill.com',
+                'address': '321 Upper Hill Road, Nairobi'
+            },
+            {
+                'name': 'Kilimani Trading Hub',
+                'supplier_id': 'SUP005',
+                'latitude': -1.2966,
+                'longitude': 36.8049,
+                'mpesa_phone_number': '+254722567890',
+                'contact_person': 'Michael Kiplagat',
+                'contact_email': 'michael@kilimani.com',
+                'address': '654 Kilimani Avenue, Nairobi'
+            },
+            {
+                'name': 'Ruiru Mugutha Distribution',
+                'supplier_id': 'SUP006',
+                'latitude': -1.0850,
+                'longitude': 36.9250,
+                'mpesa_phone_number': '+254722678901',
+                'contact_person': 'David Mwangi',
+                'contact_email': 'david@ruiru-mugutha.com',
+                'address': 'Near Tumaini Spire Academy, Mugutha, Ruiru'
+            },
+            {
+                'name': 'Executive Building Mugutha',
+                'supplier_id': 'SUP007',
+                'latitude': -1.1231552725673162,
+                'longitude': 36.963508053527995,
+                'mpesa_phone_number': '+254722789012',
+                'contact_person': 'Henry Kipchoge',
+                'contact_email': 'henry@executive-mugutha.com',
+                'address': 'Executive Building, Mugutha, Ruiru'
+            }
+        ]
+        
+        for supplier_data in suppliers_data:
+            supplier = Supplier(**supplier_data)
+            db.session.add(supplier)
+        
+        db.session.commit()
+        
+        for supplier in Supplier.query.all():
+            print(f"    ✅ Created supplier: {supplier.name} ({supplier.supplier_id})")
+        
+        # ═══════════════════════════════════════════════════════════
+        # Step 5: Verify Data
         # ═══════════════════════════════════════════════════════════
         
         print("\n📊 Database Summary:")
         print(f"  Total Roles: {Role.query.count()}")
         print(f"  Total Users: {User.query.count()}")
+        print(f"  Total Suppliers: {Supplier.query.count()}")
         
         print("\n✅ Seeding completed successfully!")
         print("\n🔐 Test Credentials:")

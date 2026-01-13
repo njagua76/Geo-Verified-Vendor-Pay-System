@@ -3,7 +3,7 @@ Supplier Model - Stores vendor/supplier information.
 """
 
 from datetime import datetime
-from models import db  # Import db from models package
+from . import db  # Import db from models package
 
 class Supplier(db.Model):
     """Supplier database model"""
@@ -32,6 +32,7 @@ class Supplier(db.Model):
             'supplier_id': self.supplier_id,
             'latitude': self.latitude,
             'longitude': self.longitude,
+            'location': self.address or 'Unknown Location',
             'mpesa_phone_number': self.mpesa_phone_number,
             'contact_person': self.contact_person,
             'contact_email': self.contact_email,
