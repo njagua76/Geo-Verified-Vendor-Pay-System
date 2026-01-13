@@ -92,6 +92,51 @@
   cursor: not-allowed;
 }
 
+/* Phone Input Styles */
+.phone-input {
+  margin-bottom: 1.5rem;
+}
+
+.phone-input label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.phone-input label svg {
+  color: #005eff;
+}
+
+.phone-input input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.phone-input input:focus {
+  outline: none;
+  border-color: #005eff;
+}
+
+.phone-input input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.phone-input small {
+  display: block;
+  color: #666;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
 .error-message {
   background: #fef2f2;
   border: 2px solid #ef4444;
@@ -135,11 +180,11 @@
 .btn-payment {
   width: 100%;
   padding: 1rem;
-  background: #005eff;
+  background: linear-gradient(135deg, #00a859 0%, #008247 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 25px;
+  font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -147,11 +192,20 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(0, 168, 89, 0.3);
 }
 
 .btn-payment:hover:not(:disabled) {
-  background: #0047cc;
-  box-shadow: 0 4px 12px rgba(0, 94, 255, 0.3);
+  background: linear-gradient(135deg, #00b865 0%, #009252 100%);
+  box-shadow: 0 6px 12px rgba(0, 168, 89, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-payment:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 168, 89, 0.3);
 }
 
 .btn-payment:disabled {

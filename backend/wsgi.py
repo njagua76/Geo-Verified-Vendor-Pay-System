@@ -1,9 +1,11 @@
 """
-WSGI entry point for Render deployment
+WSGI entry point for deployment
 """
-from app import create_app
 
-# Create the Flask app instance
+from backend.app import create_app
+
+
 app = create_app()
 
-# Used by both Render and Vercel
+if __name__ == "__main__":
+    app.run()

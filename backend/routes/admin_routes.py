@@ -1,10 +1,10 @@
 from flask import Blueprint, jsonify, request
-from decorators.role_required import role_required
-from models.transaction_log import TransactionLog
-from models.supplier import Supplier
-from models.user import User
-from models.role import Role
-from models import db
+from backend.decorators.role_required import role_required
+from backend.models.transaction_log import TransactionLog
+from backend.models.supplier import Supplier
+from backend.models.user import User
+from backend.models.role import Role
+from backend.models import db
 
 admin_bp = Blueprint("admin_bp", __name__)
 
