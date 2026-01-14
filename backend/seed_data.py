@@ -1,92 +1,81 @@
 """
-Seed script to populate database with test data.
-
-Creates:
-- Admin and Field Agent roles
-- Test users with known passwords for testing
+Seed script with options for different seeding modes.
+Usage: python seed_data.py [--mode=replace|update|fresh]
 """
 
 import sys
 import os
+import argparse
 
-# Add parent directory to path for relative imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Now we can import from the package
-from backend.app import create_app
-from backend.models import db
-from backend.models.role import Role
-from backend.models.user import User
-from backend.models.supplier import Supplier
+def parse_args():
+    parser = argparse.ArgumentParser(description='Seed database with test data')
+    parser.add_argument('--mode', choices=['replace', 'update', 'fresh'], default='replace',
+                       help='replace=replace suppliers, update=add only new, fresh=wipe all data')
+    return parser.parse_args()
 
-
-def seed_database():
-    """Populate database with initial test data."""
+def seed_database(mode='replace'):
+    """Populate database with test data based on mode."""
     
+    from app import create_app
     app = create_app()
     
     with app.app_context():
-        print("🌱 Seeding database...")
+        from models import db
+        from models.role import Role
+        from models.user import User
+        from models.supplier import Supplier
         
-        # ═══════════════════════════════════════════════════════════
-        # Step 1: Clear existing data (optional - for clean slate)
-        # ═══════════════════════════════════════════════════════════
+        print(f"🌱 Seeding database (mode: {mode})...")
         
-        print("  → Clearing existing data...")
-        User.query.delete()
-        Role.query.delete()
-        Supplier.query.delete()  # Clear suppliers too
-        db.session.commit()
+        # FRESH MODE: Delete everything
+        if mode == 'fresh':
+            print("  → FRESH MODE: Deleting all data...")
+            Supplier.query.delete()
+            User.query.delete()
+            Role.query.delete()
+            db.session.commit()
+            print("  ✅ All data deleted")
         
-        # ═══════════════════════════════════════════════════════════
-        # Step 2: Create Roles
-        # ═══════════════════════════════════════════════════════════
+        # Ensure tables exist
+        db.create_all()
         
-        print("  → Creating roles...")
+        # Create roles
+        admin_role = Role.query.filter_by(role_name='Admin').first()
+        if not admin_role:
+            admin_role = Role(role_name='Admin')
+            db.session.add(admin_role)
         
-        admin_role = Role(role_name='Admin')
-        field_agent_role = Role(role_name='Field Agent')
-        
-        db.session.add(admin_role)
-        db.session.add(field_agent_role)
-        db.session.commit()
-        
-        print(f"    ✅ Created role: {admin_role.role_name} (ID: {admin_role.id})")
-        print(f"    ✅ Created role: {field_agent_role.role_name} (ID: {field_agent_role.id})")
-        
-        # ═══════════════════════════════════════════════════════════
-        # Step 3: Create Test Users
-        # ═══════════════════════════════════════════════════════════
-        
-        print("  → Creating test users...")
-        
-        # Admin user
-        admin_user = User(
-            email='admin@example.com',
-            role_id=admin_role.id
-        )
-        admin_user.set_password('admin123')  # Password will be hashed
-        db.session.add(admin_user)
-        
-        # Field Agent user
-        agent_user = User(
-            email='agent@example.com',
-            role_id=field_agent_role.id
-        )
-        agent_user.set_password('agent123')  # Password will be hashed
-        db.session.add(agent_user)
+        field_agent_role = Role.query.filter_by(role_name='Field Agent').first()
+        if not field_agent_role:
+            field_agent_role = Role(role_name='Field Agent')
+            db.session.add(field_agent_role)
         
         db.session.commit()
         
-        print(f"    ✅ Created user: {admin_user.email} (Role: {admin_user.role.role_name})")
-        print(f"    ✅ Created user: {agent_user.email} (Role: {agent_user.role.role_name})")
+        # Create/update users
+        admin_user = User.query.filter_by(email='admin@example.com').first()
+        if not admin_user:
+            admin_user = User(email='admin@example.com', role_id=admin_role.id)
+            admin_user.set_password('admin123')
+            db.session.add(admin_user)
+        else:
+            admin_user.role_id = admin_role.id
+            admin_user.set_password('admin123')
         
-        # ═══════════════════════════════════════════════════════════
-        # Step 4: Create Test Suppliers
-        # ═══════════════════════════════════════════════════════════
+        agent_user = User.query.filter_by(email='agent@example.com').first()
+        if not agent_user:
+            agent_user = User(email='agent@example.com', role_id=field_agent_role.id)
+            agent_user.set_password('agent123')
+            db.session.add(agent_user)
+        else:
+            agent_user.role_id = field_agent_role.id
+            agent_user.set_password('agent123')
         
-        print("  → Creating test suppliers...")
+        db.session.commit()
         
+        # Handle suppliers based on mode
         suppliers_data = [
             {
                 'name': 'Nairobi Central Hub',
@@ -160,33 +149,42 @@ def seed_database():
             }
         ]
         
-        for supplier_data in suppliers_data:
-            supplier = Supplier(**supplier_data)
-            db.session.add(supplier)
+        if mode == 'replace':
+            print("  → REPLACE MODE: Replacing all suppliers...")
+            # Delete all existing suppliers
+            Supplier.query.delete()
+            db.session.commit()
+            
+            # Add all new suppliers
+            for supplier_data in suppliers_data:
+                supplier = Supplier(**supplier_data)
+                db.session.add(supplier)
+            
+            db.session.commit()
+            print(f"  ✅ Replaced with {len(suppliers_data)} suppliers")
+            
+        elif mode == 'update':
+            print("  → UPDATE MODE: Adding only new suppliers...")
+            added_count = 0
+            for supplier_data in suppliers_data:
+                # Check if supplier exists
+                existing = Supplier.query.filter_by(
+                    supplier_id=supplier_data['supplier_id']
+                ).first()
+                
+                if not existing:
+                    supplier = Supplier(**supplier_data)
+                    db.session.add(supplier)
+                    added_count += 1
+            
+            db.session.commit()
+            print(f"  ✅ Added {added_count} new suppliers")
+            print(f"  ✅ Total suppliers now: {Supplier.query.count()}")
         
-        db.session.commit()
-        
-        for supplier in Supplier.query.all():
-            print(f"    ✅ Created supplier: {supplier.name} ({supplier.supplier_id})")
-        
-        # ═══════════════════════════════════════════════════════════
-        # Step 5: Verify Data
-        # ═══════════════════════════════════════════════════════════
-        
-        print("\n📊 Database Summary:")
-        print(f"  Total Roles: {Role.query.count()}")
-        print(f"  Total Users: {User.query.count()}")
-        print(f"  Total Suppliers: {Supplier.query.count()}")
-        
-        print("\n✅ Seeding completed successfully!")
-        print("\n🔐 Test Credentials:")
-        print("  Admin Login:")
-        print("    Email: admin@example.com")
-        print("    Password: admin123")
-        print("\n  Field Agent Login:")
-        print("    Email: agent@example.com")
-        print("    Password: agent123")
+        print("\n✅ Seeding complete!")
+        print(f"📊 Summary: {Role.query.count()} roles, {User.query.count()} users, {Supplier.query.count()} suppliers")
 
 
 if __name__ == '__main__':
-    seed_database()
+    args = parse_args()
+    seed_database(args.mode)
