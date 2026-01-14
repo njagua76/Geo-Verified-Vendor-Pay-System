@@ -9,8 +9,8 @@ import os
 # Add parent directory to path for relative imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.app import create_app
-from backend.models import db
+from app import create_app
+from models import db
 
 
 def create_transactions_log_table():
@@ -25,7 +25,7 @@ def create_transactions_log_table():
         db.create_all()
         
         # Verify the table exists
-        from backend.models import TransactionLog
+        from models import TransactionLog
         result = db.session.execute(db.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'transactions_log')"))
         exists = result.scalar()
         

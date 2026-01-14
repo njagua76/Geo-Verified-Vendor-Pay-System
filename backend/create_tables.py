@@ -1,6 +1,6 @@
 """Script to create all database tables."""
 from app import create_app
-from backend.models import db
+from models import db
 
 app = create_app()
 

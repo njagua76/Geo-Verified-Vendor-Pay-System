@@ -1,5 +1,5 @@
 """
-Flask Application - Main entry point for the backend.
+Flask Application - Main entry point for the 
 """
 
 from flask import Flask

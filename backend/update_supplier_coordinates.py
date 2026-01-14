@@ -11,9 +11,9 @@ import os
 # Add parent directory to path for relative imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.app import create_app
-from backend.models import db
-from backend.models.supplier import Supplier
+from app import create_app
+from models import db
+from models.supplier import Supplier
 
 
 def update_supplier_coordinates():
