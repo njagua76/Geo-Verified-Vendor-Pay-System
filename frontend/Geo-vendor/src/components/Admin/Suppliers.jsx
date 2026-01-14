@@ -1,16 +1,44 @@
-import React, { useState } from "react";
-import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
-
-const fakeSuppliers = [
-  { id: 1, name: "M-Pesa Shop Westlands", phone: "0712345678", status: "Active" },
-  { id: 2, name: "QuickPay Distributors", phone: "0798765432", status: "Active" },
-  { id: 3, name: "Kasarani Vendor Hub", phone: "0744112233", status: "Inactive" },
-  { id: 4, name: "CBD Express Merchant", phone: "0700112233", status: "Active" },
-  { id: 5, name: "Pipeline Vendor Point", phone: "0722334455", status: "Active" },
-];
+import React, { useState, useEffect } from "react";
+import { FaEye, FaEdit, FaTrash, FaPlus, FaMapMarkerAlt, FaSearch } from "react-icons/fa";
+import { suppliersAPI } from "../../api/apiClient";
 
 const Suppliers = () => {
-  const [suppliers] = useState(fakeSuppliers);
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [showMap, setShowMap] = useState(false);
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await suppliersAPI.getAll();
+      const supplierData = response.data.suppliers || response.data || [];
+      setSuppliers(supplierData);
+    } catch (err) {
+      console.error("Error fetching suppliers:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value.toLowerCase());
+  };
+
+  const filteredSuppliers = suppliers.filter(supplier =>
+    supplier.name?.toLowerCase().includes(searchTerm) ||
+    supplier.supplier_id?.toLowerCase().includes(searchTerm) ||
+    supplier.address?.toLowerCase().includes(searchTerm)
+  );
+
+  const viewOnMap = (supplier) => {
+    setSelectedSupplier(supplier);
+    setShowMap(true);
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -70,6 +98,54 @@ const Suppliers = () => {
 
         {/* Content Area */}
         <main className="flex-1 overflow-auto p-6">
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search suppliers by name, ID, or address..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Map Modal */}
+          {showMap && selectedSupplier && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-4xl mx-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {selectedSupplier.name} Location
+                  </h3>
+                  <button
+                    onClick={() => setShowMap(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="h-96 bg-gray-100 rounded-lg overflow-hidden">
+                  <iframe
+                    title="Supplier Location"
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedSupplier.longitude - 0.01},${selectedSupplier.latitude - 0.01},${selectedSupplier.longitude + 0.01},${selectedSupplier.latitude + 0.01}&layer=mapnik&marker=${selectedSupplier.latitude},${selectedSupplier.longitude}`}
+                    style={{ border: 0 }}
+                  ></iframe>
+                </div>
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <p><strong>Address:</strong> {selectedSupplier.address}</p>
+                  <p><strong>Coordinates:</strong> {selectedSupplier.latitude.toFixed(6)}, {selectedSupplier.longitude.toFixed(6)}</p>
+                  <p><strong>Contact:</strong> {selectedSupplier.contact_person} - {selectedSupplier.mpesa_phone_number}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Table */}
           <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
@@ -78,51 +154,64 @@ const Suppliers = () => {
                   <tr className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200">
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Supplier Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Phone</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Contact</th>
                     <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {suppliers.map((supplier, index) => (
-                    <tr 
-                      key={supplier.id} 
-                      className="hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{supplier.id}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{supplier.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{supplier.phone}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          supplier.status === "Active" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-red-100 text-red-800"
-                        }`}>
-                          {supplier.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center justify-center gap-3">
-                          <button className="text-blue-600 hover:text-blue-900 transition-colors" title="View">
-                            <FaEye className="w-4 h-4" />
-                          </button>
-                          <button className="text-amber-600 hover:text-amber-900 transition-colors" title="Edit">
-                            <FaEdit className="w-4 h-4" />
-                          </button>
-                          <button className="text-red-600 hover:text-red-900 transition-colors" title="Delete">
-                            <FaTrash className="w-4 h-4" />
-                          </button>
-                        </div>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                        Loading suppliers...
                       </td>
                     </tr>
-                  ))}
+                  ) : filteredSuppliers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                        No suppliers found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSuppliers.map((supplier, index) => (
+                      <tr 
+                        key={supplier.id || index}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{supplier.supplier_id}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{supplier.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{supplier.address || 'N/A'}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{supplier.mpesa_phone_number}</td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="flex items-center justify-center gap-3">
+                            <button 
+                              onClick={() => viewOnMap(supplier)}
+                              className="text-green-600 hover:text-green-900 transition-colors" 
+                              title="View on Map"
+                            >
+                              <FaMapMarkerAlt className="w-4 h-4" />
+                            </button>
+                            <button className="text-blue-600 hover:text-blue-900 transition-colors" title="View">
+                              <FaEye className="w-4 h-4" />
+                            </button>
+                            <button className="text-amber-600 hover:text-amber-900 transition-colors" title="Edit">
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button className="text-red-600 hover:text-red-900 transition-colors" title="Delete">
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
             
             {/* Pagination */}
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-              <p className="text-sm text-gray-600">Showing 1 to {suppliers.length} of {suppliers.length} suppliers</p>
+              <p className="text-sm text-gray-600">Showing {filteredSuppliers.length} of {suppliers.length} suppliers</p>
               <div className="flex gap-2">
                 <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   Previous
