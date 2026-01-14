@@ -14,34 +14,33 @@ admin_bp = Blueprint("admin_bp", __name__)
 def get_dashboard_stats():
     """
     Get dashboard statistics for admin.
-    Returns total users, suppliers, and transactions counts.
+    Returns total users, suppliers, and field agents counts.
+    Transactions temporarily disabled pending DB migration.
     """
     try:
         total_users = User.query.count()
         total_suppliers = Supplier.query.count()
-        total_transactions = TransactionLog.query.count()
         
-        # Get recent transactions count
-        recent_transactions = TransactionLog.query.filter(
-            TransactionLog.created_at >= db.func.date_sub(
-                db.func.now(), db.text("INTERVAL 7 DAY")
-            )
-        ).count()
+        # Get field agents count
+        field_agent_role = Role.query.filter_by(role_name='Field Agent').first()
+        total_field_agents = User.query.filter_by(role_id=field_agent_role.id).count() if field_agent_role else 0
         
-        # Get transactions by status
-        success_count = TransactionLog.query.filter_by(status='success').count()
-        pending_count = TransactionLog.query.filter_by(status='pending').count()
-        failed_count = TransactionLog.query.filter_by(status='failed').count()
+        # Get admins count
+        admin_role = Role.query.filter_by(role_name='Admin').first()
+        total_admins = User.query.filter_by(role_id=admin_role.id).count() if admin_role else 0
         
         return jsonify({
             'stats': {
                 'total_users': total_users,
                 'total_suppliers': total_suppliers,
-                'total_transactions': total_transactions,
-                'recent_transactions': recent_transactions,
-                'success_count': success_count,
-                'pending_count': pending_count,
-                'failed_count': failed_count
+                'total_field_agents': total_field_agents,
+                'total_admins': total_admins,
+                # Transactions temporarily set to 0 pending DB migration
+                'total_transactions': 0,
+                'recent_transactions': 0,
+                'success_count': 0,
+                'pending_count': 0,
+                'failed_count': 0
             }
         }), 200
     except Exception as e:

@@ -23,6 +23,7 @@ def admin_dashboard(current_user):
 
     Returns comprehensive dashboard statistics for admin users.
     Only users with 'Admin' role can access this.
+    Transactions temporarily disabled pending DB migration.
     """
     try:
         # Get user statistics
@@ -33,7 +34,8 @@ def admin_dashboard(current_user):
         field_agents = User.query.filter_by(role_id=field_agent_role.id).count() if field_agent_role else 0
         admins = User.query.filter_by(role_id=admin_role.id).count() if admin_role else 0
         total_suppliers = Supplier.query.count()
-        total_transactions = TransactionLog.query.count()
+        # Temporarily skip transactions until DB migration
+        total_transactions = 0
 
         return jsonify({
             'message': 'Welcome to Admin Dashboard',

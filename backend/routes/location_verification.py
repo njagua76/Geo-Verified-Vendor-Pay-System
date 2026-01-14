@@ -11,7 +11,7 @@ location_bp = Blueprint('location', __name__)
 
 @location_bp.route('/verify-location', methods=['POST'])
 @role_required('Field Agent')
-def verify_location():
+def verify_location(current_user):
     """
     Verify if field agent is within 20 meters of a supplier.
     
