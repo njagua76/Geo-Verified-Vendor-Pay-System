@@ -6,9 +6,9 @@ Includes dashboard stats, user management, and verification endpoints.
 """
 
 from flask import Blueprint, jsonify, request
-from decorators.role_decorator import role_required
-from models import db, User, Supplier, TransactionLog
-from models.role import Role
+from ..decorators.role_decorator import role_required
+from ..models import db, User, Supplier, TransactionLog
+from ..models.role import Role
 from math import radians, sin, cos, sqrt, atan2
 
 

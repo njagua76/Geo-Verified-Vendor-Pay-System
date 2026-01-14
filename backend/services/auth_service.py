@@ -9,9 +9,9 @@ This service handles:
 
 import jwt
 from datetime import datetime, timezone
-from models import db
-from models.user import User
-from config import Config
+from ..models import db
+from ..models.user import User
+from ..config import Config
 
 class AuthService:
     """Service class for authentication operations"""

@@ -3,9 +3,9 @@ Location Verification Routes - Verify field agent is within 20m of supplier.
 """
 
 from flask import Blueprint, request, jsonify
-from models import db, Supplier
-from decorators import role_required
-from utils.geoutils import haversine_distance, is_within_radius
+from ..models import db, Supplier
+from ..decorators import role_required
+from ..utils.geoutils import haversine_distance, is_within_radius
 
 location_bp = Blueprint('location', __name__)
 

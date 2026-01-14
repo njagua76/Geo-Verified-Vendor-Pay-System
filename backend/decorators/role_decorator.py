@@ -7,7 +7,7 @@ Provides:
 
 from functools import wraps
 from flask import jsonify
-from utils.jwt_utils import verify_token
+from ..utils.jwt_utils import verify_token
 
 
 def role_required(required_role):

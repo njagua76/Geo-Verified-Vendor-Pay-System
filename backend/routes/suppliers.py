@@ -7,9 +7,9 @@ Payment operations are Field Agent accessible.
 """
 
 from flask import Blueprint, request, jsonify
-from models import db, Supplier, TransactionLog
-from decorators import role_required
-from services.mpesa_service import initiate_payment, process_mpesa_callback
+from ..models import db, Supplier, TransactionLog
+from ..decorators import role_required
+from ..services.mpesa_service import initiate_payment, process_mpesa_callback
 import re
 
 suppliers_bp = Blueprint('suppliers', __name__)

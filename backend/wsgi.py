@@ -1,7 +1,7 @@
 """
 WSGI entry point for Render deployment
 """
-from app import create_app
+from .app import create_app
 
 # Create the Flask app instance
 app = create_app()
