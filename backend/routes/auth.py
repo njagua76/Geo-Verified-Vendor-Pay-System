@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
-from backend.services.auth_service import AuthService
-
-from backend.validators.input_validator import validate_email, validate_password
+from services.auth_service import AuthService
+from validators.input_validator import validate_email, validate_password
 
 auth_bp = Blueprint('auth', __name__)
 
