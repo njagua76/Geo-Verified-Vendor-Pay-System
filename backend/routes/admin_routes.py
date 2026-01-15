@@ -30,18 +30,25 @@ def get_dashboard_stats(current_user):
         admin_role = Role.query.filter_by(role_name='Admin').first()
         total_admins = User.query.filter_by(role_id=admin_role.id).count() if admin_role else 0
         
+        # Get transaction counts
+        total_transactions = TransactionLog.query.count()
+        success_count = TransactionLog.query.filter_by(status='COMPLETED').count()
+        pending_count = TransactionLog.query.filter(
+            TransactionLog.status.in_(['PENDING', 'PAYMENT_SENT'])
+        ).count()
+        failed_count = TransactionLog.query.filter_by(status='FAILED').count()
+        
         return jsonify({
             'stats': {
                 'total_users': total_users,
                 'total_suppliers': total_suppliers,
                 'total_field_agents': total_field_agents,
                 'total_admins': total_admins,
-                # Transactions temporarily set to 0 pending DB migration
-                'total_transactions': 0,
-                'recent_transactions': 0,
-                'success_count': 0,
-                'pending_count': 0,
-                'failed_count': 0
+                'total_transactions': total_transactions,
+                'recent_transactions': total_transactions,
+                'success_count': success_count,
+                'pending_count': pending_count,
+                'failed_count': failed_count
             }
         }), 200
     except Exception as e:
