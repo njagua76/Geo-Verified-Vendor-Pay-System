@@ -223,6 +223,7 @@ export const adminAPI = {
     }
     return apiClient.get('/api/admin/dashboard');
   },
+  getTransactionLogs: () => apiClient.get('/api/admin/transactions-log'),
   getTransactions: (params = {}) => {
     if (MOCK_MODE) {
       return Promise.resolve({ data: { transactions: [] } });
