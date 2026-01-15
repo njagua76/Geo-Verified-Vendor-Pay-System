@@ -12,7 +12,6 @@ from routes.protected_routes import protected_bp
 from routes.suppliers import suppliers_bp
 from routes.location_verification import location_bp
 from routes.admin_routes import admin_bp
-from routes.mpesa_callbacks import mpesa_callbacks_bp
 
 
 def create_app():
@@ -38,7 +37,6 @@ def create_app():
     app.register_blueprint(suppliers_bp, url_prefix="/api/suppliers")
     app.register_blueprint(location_bp, url_prefix="/api/location")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
-    app.register_blueprint(mpesa_callbacks_bp)  # Has its own url_prefix
 
     # -------------------------------
     # Health Check
