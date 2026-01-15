@@ -3,11 +3,49 @@ import axios from "axios";
 
 const AuthContext = createContext();
 
+// Mock mode for local development without backend
+const MOCK_MODE = process.env.REACT_APP_MOCK_AUTH === 'true' || !process.env.REACT_APP_API_URL;
+
+// Mock users from seed_data.py
+const MOCK_USERS = [
+  {
+    email: 'admin@example.com',
+    password: 'admin123',
+    user: {
+      id: 1,
+      email: 'admin@example.com',
+      name: 'Admin User',
+      role: 'Admin',
+      role_name: 'Admin'
+    }
+  },
+  {
+    email: 'agent@example.com',
+    password: 'agent123',
+    user: {
+      id: 2,
+      email: 'agent@example.com',
+      name: 'Field Agent',
+      role: 'Field Agent',
+      role_name: 'Field Agent'
+    }
+  }
+];
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if (MOCK_MODE) {
+      console.log('🔓 Running in MOCK AUTH mode (no backend required)');
+      console.log('📝 Use these credentials:');
+      console.log('   Admin: admin@example.com / admin123');
+      console.log('   Agent: agent@example.com / agent123');
+    }
+  }, []);
 
   // Initialize from localStorage on mount
   useEffect(() => {
@@ -50,6 +88,57 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    // MOCK MODE: Use hardcoded credentials without backend
+    if (MOCK_MODE) {
+      try {
+        // Clear any previous auth state before login
+        setIsLoggedIn(false);
+        setUser(null);
+        setToken(null);
+        delete axios.defaults.headers.common["Authorization"];
+
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Check credentials against mock users
+        const mockUser = MOCK_USERS.find(
+          u => u.email === email && u.password === password
+        );
+
+        if (!mockUser) {
+          return { success: false, message: "Invalid email or password" };
+        }
+
+        // Generate a fake token
+        const mockToken = `mock-token-${Date.now()}-${mockUser.user.id}`;
+
+        // Store token and user in state and localStorage
+        setToken(mockToken);
+        setUser(mockUser.user);
+        setIsLoggedIn(true);
+
+        localStorage.setItem("token", mockToken);
+        localStorage.setItem("user", JSON.stringify(mockUser.user));
+
+        // Set token in axios headers for future requests
+        axios.defaults.headers.common["Authorization"] = `Bearer ${mockToken}`;
+
+        console.log('✅ Mock login successful:', mockUser.user.email);
+        return { success: true, user: mockUser.user };
+      } catch (error) {
+        // Ensure clean state on error
+        setToken(null);
+        setUser(null);
+        setIsLoggedIn(false);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        delete axios.defaults.headers.common["Authorization"];
+
+        return { success: false, message: "Login failed" };
+      }
+    }
+
+    // REAL MODE: Use actual backend API
     try {
       // Clear any previous auth state before login
       setIsLoggedIn(false);
