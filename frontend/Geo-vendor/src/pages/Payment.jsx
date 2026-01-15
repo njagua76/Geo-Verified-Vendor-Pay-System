@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { DollarSign, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 import { suppliersAPI } from "../api/apiClient";
@@ -9,20 +9,14 @@ const Payment = () => {
   const navigate = useNavigate();
   const [supplier, setSupplier] = useState(null);
   const [amount, setAmount] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState("idle"); // idle, processing, success, error
+  const [paymentStatus, setPaymentStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const supplierId = searchParams.get("supplier");
   const userLat = searchParams.get("lat");
   const userLon = searchParams.get("lon");
 
-  useEffect(() => {
-    if (supplierId) {
-      fetchSupplier();
-    }
-  }, [supplierId]);
-
-  const fetchSupplier = async () => {
+  const fetchSupplier = useCallback(async () => {
     try {
       const response = await suppliersAPI.getById(supplierId);
       setSupplier(response.data.supplier || response.data);
@@ -30,7 +24,13 @@ const Payment = () => {
       console.error("Error fetching supplier:", err);
       setErrorMessage("Failed to load supplier information");
     }
-  };
+  }, [supplierId]);
+
+  useEffect(() => {
+    if (supplierId) {
+      fetchSupplier();
+    }
+  }, [supplierId, fetchSupplier]);
 
   const handlePayment = async () => {
     if (!amount || amount <= 0) {
@@ -47,8 +47,6 @@ const Payment = () => {
     setErrorMessage("");
     
     try {
-      // Call location verification + B2C payment API
-      // This will verify location and send money directly to supplier
       const response = await suppliersAPI.verifyLocationAndPay({
         user_lat: parseFloat(userLat),
         user_lon: parseFloat(userLon),
@@ -72,10 +70,7 @@ const Payment = () => {
 
   return (
     <div className="payment-container">
-      <button
-        onClick={() => navigate(-1)}
-        className="btn-back"
-      >
+      <button onClick={() => navigate(-1)} className="btn-back">
         <ArrowLeft size={20} /> Back
       </button>
 
@@ -88,18 +83,10 @@ const Payment = () => {
         {supplier && (
           <div className="supplier-info">
             <h3>Supplier Details</h3>
-            <p>
-              <strong>Name:</strong> {supplier.name}
-            </p>
-            <p>
-              <strong>Location:</strong> {supplier.address || supplier.location || "N/A"}
-            </p>
-            <p>
-              <strong>Contact:</strong> {supplier.contact_person || "N/A"}
-            </p>
-            <p>
-              <strong>Phone:</strong> {supplier.mpesa_phone_number}
-            </p>
+            <p><strong>Name:</strong> {supplier.name}</p>
+            <p><strong>Location:</strong> {supplier.address || supplier.location || "N/A"}</p>
+            <p><strong>Contact:</strong> {supplier.contact_person || "N/A"}</p>
+            <p><strong>Phone:</strong> {supplier.mpesa_phone_number}</p>
           </div>
         )}
 
@@ -142,9 +129,7 @@ const Payment = () => {
               disabled={paymentStatus === "processing" || !amount}
               className="btn-payment"
             >
-              {paymentStatus === "processing"
-                ? "Processing Payment..."
-                : "Send Payment to Supplier"}
+              {paymentStatus === "processing" ? "Processing Payment..." : "Send Payment to Supplier"}
             </button>
           </>
         )}
