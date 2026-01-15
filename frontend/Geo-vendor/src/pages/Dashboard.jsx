@@ -292,12 +292,14 @@ export const Dashboard = () => {
                       <td className="px-6 py-4 text-sm text-gray-700">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-gray-400" />
-                          {transaction.supplier_id || 'N/A'}
+                          <span className="truncate max-w-[200px]" title={transaction.supplier_name || `Supplier #${transaction.supplier_id}`}>
+                            {transaction.supplier_name || `Supplier #${transaction.supplier_id}` || 'N/A'}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm font-medium">
                         <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
-                          {transaction.distance_meters ? `${transaction.distance_meters.toFixed(1)}m` : 'N/A'}
+                          {transaction.distance_meters !== null && transaction.distance_meters !== undefined ? `${Number(transaction.distance_meters).toFixed(1)}m` : '0.0m'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
