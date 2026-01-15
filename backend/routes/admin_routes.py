@@ -11,7 +11,7 @@ admin_bp = Blueprint("admin_bp", __name__)
 
 @admin_bp.route("/dashboard", methods=["GET"])
 @role_required("Admin")
-def get_dashboard_stats():
+def get_dashboard_stats(current_user):
     """
     Get dashboard statistics for admin.
     Returns total users, suppliers, and field agents counts.
@@ -49,7 +49,7 @@ def get_dashboard_stats():
 
 @admin_bp.route("/transactions", methods=["GET"])
 @role_required("Admin")
-def get_all_transactions():
+def get_all_transactions(current_user):
     """
     Get all transactions for admin dashboard.
     Supports filtering by status, supplier, date range, and pagination.
@@ -97,7 +97,7 @@ def get_all_transactions():
 
 @admin_bp.route("/transactions-log", methods=["GET"])
 @role_required("Admin")
-def get_transactions_log():
+def get_transactions_log(current_user):
     """
     Get recent transaction logs (limited to 10).
     """
@@ -140,7 +140,7 @@ def get_transactions_log():
 
 @admin_bp.route("/suppliers", methods=["GET"])
 @role_required("Admin")
-def get_suppliers():
+def get_suppliers(current_user):
     """Get all suppliers for admin."""
     try:
         suppliers = Supplier.query.all()
@@ -154,7 +154,7 @@ def get_suppliers():
 
 @admin_bp.route("/users", methods=["GET"])
 @role_required("Admin")
-def get_users():
+def get_users(current_user):
     """Get all users for admin."""
     try:
         users = User.query.all()
@@ -168,7 +168,7 @@ def get_users():
 
 @admin_bp.route("/transactions/<int:transaction_id>", methods=["GET"])
 @role_required("Admin")
-def get_transaction_detail(transaction_id):
+def get_transaction_detail(current_user, transaction_id):
     """Get details of a specific transaction."""
     try:
         transaction = TransactionLog.query.get(transaction_id)

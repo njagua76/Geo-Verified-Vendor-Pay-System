@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 import jwt
 import os
 
@@ -17,7 +17,9 @@ def role_required(required_role):
 
             try:
                 token = auth_header.split(" ")[1]
-                decoded = jwt.decode(token, os.environ.get("JWT_SECRET"), algorithms=["HS256"])
+                # Use JWT_SECRET_KEY from config or env, fallback to dev key
+                secret = current_app.config.get('JWT_SECRET_KEY') or os.environ.get("JWT_SECRET_KEY") or os.environ.get("JWT_SECRET") or "dev-secret-key-CHANGE-IN-PRODUCTION"
+                decoded = jwt.decode(token, secret, algorithms=["HS256"])
                 user_role = decoded.get("role_name")
 
                 if user_role != required_role:
