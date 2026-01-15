@@ -12,8 +12,6 @@ const Payment = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const supplierId = searchParams.get("supplier");
-  const userLat = searchParams.get("lat");
-  const userLon = searchParams.get("lon");
 
   const fetchSupplier = useCallback(async () => {
     try {
@@ -29,7 +27,7 @@ const Payment = () => {
     if (supplierId) {
       fetchSupplier();
     }
-  }, [supplierId, fetchSupplier]);
+  }, [supplierId]);
 
   const handlePayment = async () => {
     if (!amount || amount <= 0) {
@@ -37,180 +35,169 @@ const Payment = () => {
       return;
     }
 
-    if (!userLat || !userLon) {
-      setErrorMessage("Location coordinates missing. Please verify location first.");
-      return;
-    }
-
     setPaymentStatus("processing");
     setErrorMessage("");
-    
+
     try {
-      const response = await suppliersAPI.verifyLocationAndPay({
-        user_lat: parseFloat(userLat),
-        user_lon: parseFloat(userLon),
-        supplier_id: parseInt(supplierId),
-        amount: parseFloat(amount)
+      const response = await suppliersAPI.initiatePayment({
+        supplier_id: supplierId,
+        amount: parseFloat(amount),
+        description: `Payment to ${supplier.name}`,
       });
 
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         setPaymentStatus("success");
         setTimeout(() => {
-          navigate("/field-agent/dashboard");
-        }, 3000);
+          navigate("/verify");
+        }, 2000);
       }
     } catch (err) {
       console.error("Payment error:", err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || "Payment failed. Please try again.";
-      setErrorMessage(errorMsg);
+      setErrorMessage(err.response?.data?.message || "Payment failed. Please try again.");
       setPaymentStatus("error");
     }
   };
 
+  if (paymentStatus === "success") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6">
+            <CheckCircle2 className="w-12 h-12 text-green-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+          <p className="text-gray-600 mb-4">Your payment has been processed successfully.</p>
+          <p className="text-sm text-gray-500">Redirecting to verification page...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 p-4">
+      <div className="max-w-2xl mx-auto pt-8">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft className="w-5 h-5" />
           <span className="font-medium">Back</span>
         </button>
 
-        {/* Main Payment Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Header with Gradient */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
+        {/* Main Card */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-green-600 to-green-500 p-8 text-white">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <DollarSign size={32} />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold">Payment Processing</h1>
-                <p className="text-blue-100 mt-1">Secure M-Pesa B2C Transaction</p>
-              </div>
+              <DollarSign className="w-8 h-8" />
+              <h1 className="text-3xl font-bold">M-Pesa Payment</h1>
             </div>
+            <p className="text-green-50">Complete your secure payment</p>
           </div>
 
           {/* Content */}
           <div className="p-8">
+            {/* Supplier Information */}
             {supplier && (
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Building2 size={20} className="text-blue-600" />
-                  Supplier Information
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Supplier Details</h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <User size={20} className="text-gray-400 mt-0.5" />
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50">
+                    <Building2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm text-gray-500">Supplier Name</p>
-                      <p className="font-semibold text-gray-900">{supplier.name}</p>
+                      <p className="text-xs text-gray-500 font-medium">Supplier Name</p>
+                      <p className="text-sm font-semibold text-gray-900">{supplier.name}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <Phone size={20} className="text-gray-400 mt-0.5" />
+                  
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50">
+                    <User className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm text-gray-500">M-Pesa Number</p>
-                      <p className="font-semibold text-gray-900">{supplier.mpesa_phone_number}</p>
+                      <p className="text-xs text-gray-500 font-medium">Contact Person</p>
+                      <p className="text-sm font-semibold text-gray-900">{supplier.contact_person || "N/A"}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <MapPin size={20} className="text-gray-400 mt-0.5" />
+                  
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50">
+                    <Phone className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm text-gray-500">Location</p>
-                      <p className="font-semibold text-gray-900">{supplier.address || supplier.location || "N/A"}</p>
+                      <p className="text-xs text-gray-500 font-medium">Phone Number</p>
+                      <p className="text-sm font-semibold text-gray-900">{supplier.mpesa_phone_number || "N/A"}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <User size={20} className="text-gray-400 mt-0.5" />
+                  
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50">
+                    <MapPin className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm text-gray-500">Contact Person</p>
-                      <p className="font-semibold text-gray-900">{supplier.contact_person || "N/A"}</p>
+                      <p className="text-xs text-gray-500 font-medium">Location</p>
+                      <p className="text-sm font-semibold text-gray-900">{supplier.address || supplier.location || "N/A"}</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {paymentStatus === "success" ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
-                  <CheckCircle2 size={48} className="text-green-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">Payment Successful!</h2>
-                <p className="text-gray-600 mb-2">
-                  Payment has been sent to {supplier?.name} via M-Pesa B2C.
-                </p>
-                <p className="text-sm text-gray-500">Redirecting to dashboard in 3 seconds...</p>
+            {/* Payment Amount */}
+            <div className="mb-6">
+              <label htmlFor="amount" className="block text-sm font-semibold text-gray-900 mb-3">
+                Payment Amount (KES)
+              </label>
+              <div className="relative">
+                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-green-600" />
+                <input
+                  id="amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    setErrorMessage("");
+                  }}
+                  placeholder="Enter amount"
+                  disabled={paymentStatus === "processing"}
+                  min="1"
+                  step="0.01"
+                  className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 focus:bg-white"
+                />
               </div>
-            ) : (
-              <>
-                {/* Payment Info Alert */}
-                <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6">
-                  <AlertCircle size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm text-blue-900">
-                      <strong>Direct Payment:</strong> Funds will be sent directly to the supplier's M-Pesa number{" "}
-                      <span className="font-semibold">{supplier?.mpesa_phone_number}</span>
-                    </p>
-                  </div>
-                </div>
+              <p className="mt-2 text-xs text-gray-500">Enter the payment amount in Kenyan Shillings</p>
+            </div>
 
-                {/* Amount Input */}
-                <div className="mb-6">
-                  <label htmlFor="amount" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Payment Amount
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <CreditCard size={20} className="text-gray-400" />
-                    </div>
-                    <input
-                      id="amount"
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount in KES"
-                      disabled={paymentStatus === "processing"}
-                      min="1"
-                      step="0.01"
-                      className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">Minimum amount: KES 1.00</p>
-                </div>
-
-                {/* Error Message */}
-                {errorMessage && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                    <AlertCircle size={20} className="text-red-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-red-800">{errorMessage}</p>
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <button
-                  onClick={handlePayment}
-                  disabled={paymentStatus === "processing" || !amount || parseFloat(amount) <= 0}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  {paymentStatus === "processing" ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing Payment...
-                    </>
-                  ) : (
-                    <>
-                      <DollarSign size={20} />
-                      Send Payment to Supplier
-                    </>
-                  )}
-                </button>
-              </>
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-red-900">{errorMessage}</p>
+              </div>
             )}
+
+            {/* Info Message */}
+            <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-green-900">M-Pesa Payment</p>
+                <p className="text-xs text-green-700 mt-1">You will receive an STK push on your registered phone number to complete the payment.</p>
+              </div>
+            </div>
+
+            {/* Payment Button */}
+            <button
+              onClick={handlePayment}
+              disabled={paymentStatus === "processing" || !amount}
+              className="w-full py-4 px-6 bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold rounded-xl shadow-lg hover:from-green-700 hover:to-green-600 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              {paymentStatus === "processing" ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Processing Payment...
+                </>
+              ) : (
+                <>
+                  <DollarSign className="w-5 h-5" />
+                  Pay with M-Pesa
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
