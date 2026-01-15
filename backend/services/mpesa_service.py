@@ -177,7 +177,7 @@ class MpesaService:
                 status='PENDING',  # Initial status
                 transaction_type='B2C_PAYMENT',
                 description=remarks,
-                distance_meters=None  # Will be updated by location verification
+                distance_meters=0.0  # Set to 0 for direct B2C payments without location verification
             )
             db.session.add(transaction)
             db.session.commit()

@@ -123,14 +123,15 @@ def get_transactions_log(current_user):
             result.append({
                 "id": log.id,
                 "supplier_id": log.supplier_id,
-                "agent_id": log.agent_id,
-                "status": log.status,
-                "distance_meters": log.distance_meters,
-                "created_at": log.created_at.isoformat() if log.created_at else None,
                 "supplier_name": supplier_name,
+                "agent_id": log.agent_id,
                 "agent_email": agent_email,
+                "status": log.status,
+                "distance_meters": round(log.distance_meters, 2) if log.distance_meters is not None else 0.0,
                 "amount": log.amount,
-                "transaction_type": log.transaction_type
+                "transaction_type": log.transaction_type,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+                "phone_number": log.phone_number
             })
         
         return jsonify(result), 200
