@@ -101,26 +101,41 @@ def get_transactions_log():
     """
     Get recent transaction logs (limited to 10).
     """
-    logs = (
-        TransactionLog.query
-        .order_by(TransactionLog.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    try:
+        logs = (
+            TransactionLog.query
+            .order_by(TransactionLog.created_at.desc())
+            .limit(10)
+            .all()
+        )
 
-    return jsonify([
-        {
-            "id": log.id,
-            "supplier_id": log.supplier_id,
-            "agent_id": log.agent_id,
-            "status": log.status,
-            "distance_meters": log.distance_meters,
-            "created_at": log.created_at.isoformat() if log.created_at else None,
-            "supplier_name": log.supplier.name if log.supplier else None,
-            "agent_email": log.agent.email if log.agent else None
-        }
-        for log in logs
-    ]), 200
+        result = []
+        for log in logs:
+            try:
+                supplier_name = log.supplier.name if log.supplier else None
+            except Exception:
+                supplier_name = None
+            try:
+                agent_email = log.agent.email if log.agent else None
+            except Exception:
+                agent_email = None
+            
+            result.append({
+                "id": log.id,
+                "supplier_id": log.supplier_id,
+                "agent_id": log.agent_id,
+                "status": log.status,
+                "distance_meters": log.distance_meters,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+                "supplier_name": supplier_name,
+                "agent_email": agent_email,
+                "amount": log.amount,
+                "transaction_type": log.transaction_type
+            })
+        
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e), "transactions": []}), 500
 
 
 @admin_bp.route("/suppliers", methods=["GET"])
