@@ -64,6 +64,7 @@ export const suppliersAPI = {
     apiClient.get(`/api/suppliers/payment/status/${checkoutRequestId}`),
   getTransactions: (params = {}) => 
     apiClient.get('/api/suppliers/transactions', { params }),
+  verifyLocationAndPay: (data) => apiClient.post('/api/location/verify-location', data),
 };
 
 export const verificationAPI = {
