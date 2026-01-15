@@ -30,7 +30,8 @@ def role_required(required_role):
             except jwt.InvalidTokenError:
                 return jsonify({"error": "Invalid token"}), 401
 
-            return f(*args, **kwargs)
+            # Pass the decoded JWT token to the route function
+            return f(decoded, *args, **kwargs)
         return wrapper
     return decorator
 
