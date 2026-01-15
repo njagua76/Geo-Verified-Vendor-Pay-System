@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-const MOCK_MODE = process.env.REACT_APP_MOCK_AUTH === 'true' || !process.env.REACT_APP_API_URL;
+const MOCK_MODE = process.env.REACT_APP_MOCK_AUTH === 'true';
 
 // Mock data from seed_data.py
 const MOCK_SUPPLIERS = [
