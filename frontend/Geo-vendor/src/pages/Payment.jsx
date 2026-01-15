@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { DollarSign, ArrowLeft, CheckCircle2, AlertCircle, MapPin, Phone, User, Building2, CreditCard } from "lucide-react";
 import { suppliersAPI } from "../api/apiClient";
+import apiClient from "../api/apiClient";
 
 const Payment = () => {
   const [searchParams] = useSearchParams();
@@ -12,6 +13,8 @@ const Payment = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const supplierId = searchParams.get("supplier");
+  const userLat = searchParams.get("lat");
+  const userLon = searchParams.get("lon");
 
   const fetchSupplier = useCallback(async () => {
     try {
@@ -35,14 +38,21 @@ const Payment = () => {
       return;
     }
 
+    if (!userLat || !userLon) {
+      setErrorMessage("Location data missing. Please go back and verify your location again.");
+      return;
+    }
+
     setPaymentStatus("processing");
     setErrorMessage("");
 
     try {
-      const response = await suppliersAPI.initiatePayment({
-        supplier_id: supplierId,
-        amount: parseFloat(amount),
-        description: `Payment to ${supplier.name}`,
+      // Use location verification endpoint which handles payment
+      const response = await apiClient.post('/api/location/verify-location', {
+        user_lat: parseFloat(userLat),
+        user_lon: parseFloat(userLon),
+        supplier_id: parseInt(supplierId),
+        amount: parseFloat(amount)
       });
 
       if (response.status === 200 || response.status === 201) {
@@ -53,7 +63,8 @@ const Payment = () => {
       }
     } catch (err) {
       console.error("Payment error:", err);
-      setErrorMessage(err.response?.data?.message || "Payment failed. Please try again.");
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || "Payment failed. Please try again.";
+      setErrorMessage(errorMsg);
       setPaymentStatus("error");
     }
   };
@@ -176,7 +187,7 @@ const Payment = () => {
               <AlertCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-green-900">M-Pesa Payment</p>
-                <p className="text-xs text-green-700 mt-1">You will receive an STK push on your registered phone number to complete the payment.</p>
+                <p className="text-xs text-green-700 mt-1">Payment will be sent to the supplier's M-Pesa number.</p>
               </div>
             </div>
 

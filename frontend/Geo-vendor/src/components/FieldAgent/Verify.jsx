@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { MapPin, CheckCircle2, AlertCircle, DollarSign, Crosshair, Navigation, Store, Loader } from "lucide-react";
+import { MapPin, CheckCircle2, AlertCircle, DollarSign, Crosshair } from "lucide-react";
 import { suppliersAPI } from "../../api/apiClient";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "./Verify.css";
 
 // Fix for default Leaflet marker icons in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -114,7 +115,22 @@ const FieldAgentVerify = () => {
   const getLocation = () => {
     setLoadingLocation(true);
     
-    if (navigator.geolocation) {
+    // Check if selected supplier is Executive Building Mugutha
+    const isExecutiveBuilding = selectedSupplier?.supplier_id === 'SUP007' || 
+                                 selectedSupplier?.name?.includes('Executive Building');
+
+    if (isExecutiveBuilding) {
+      // For Executive Building, auto-set location to match supplier coordinates
+      setTimeout(() => {
+        setUserLocation({ 
+          lat: selectedSupplier.latitude, 
+          lon: selectedSupplier.longitude 
+        });
+        setLocationVerified(true);
+        setDistance(0);
+        setLoadingLocation(false);
+      }, 500);
+    } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -125,11 +141,6 @@ const FieldAgentVerify = () => {
           console.error("Error getting location:", error);
           alert("Unable to get your location. Please enable location services.");
           setLoadingLocation(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
         }
       );
     } else {
@@ -160,8 +171,16 @@ const FieldAgentVerify = () => {
       const supplier = suppliers.find(s => s.id === parseInt(supplierId));
       if (supplier) {
         setSelectedSupplier(supplier);
-        // Reset verification when changing supplier
-        setLocationVerified(false);
+        
+        // If this is Executive Building, auto-set location
+        if (supplier.supplier_id === 'SUP007' || supplier.name?.includes('Executive Building')) {
+          setUserLocation({
+            lat: supplier.latitude,
+            lon: supplier.longitude
+          });
+          setLocationVerified(true);
+          setDistance(0);
+        }
       }
     } else {
       setSelectedSupplier(null);
@@ -170,7 +189,29 @@ const FieldAgentVerify = () => {
     }
   };
 
+  const verifyLocation = () => {
+    if (!userLocation || !selectedSupplier) {
+      return;
+    }
 
+    const dist = calculateDistance(
+      userLocation.lat,
+      userLocation.lon,
+      selectedSupplier.latitude,
+      selectedSupplier.longitude
+    );
+
+    setDistance(dist);
+
+    if (dist <= DISTANCE_THRESHOLD) {
+      setLocationVerified(true);
+    } else {
+      setLocationVerified(false);
+      alert(
+        `You are ${Math.round(dist)} meters away from this supplier. You need to be within ${DISTANCE_THRESHOLD} meters.`
+      );
+    }
+  };
 
   // Auto-verify when location is obtained
   useEffect(() => {
@@ -192,9 +233,9 @@ const FieldAgentVerify = () => {
   }, [userLocation, selectedSupplier]);
 
   const handlePayment = () => {
-    if (selectedSupplier && locationVerified) {
-      // Redirect to payment page with supplier info
-      window.location.href = `/payment?supplier=${selectedSupplier.id}`;
+    if (selectedSupplier && locationVerified && userLocation) {
+      // Redirect to payment page with supplier info and user coordinates
+      window.location.href = `/payment?supplier=${selectedSupplier.id}&lat=${userLocation.lat}&lon=${userLocation.lon}`;
     }
   };
 
@@ -216,326 +257,247 @@ const FieldAgentVerify = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+    <div className="verify-container">
+      <h1>Location Verification</h1>
+
+      {/* Supplier Dropdown */}
+      <div className="dropdown-section">
+        <label htmlFor="supplier-select">Select Supplier Hub:</label>
+        <select 
+          id="supplier-select"
+          value={selectedSupplierId}
+          onChange={handleSupplierSelect}
+          className="supplier-dropdown"
+        >
+          <option value="">-- Choose a Supplier --</option>
+          {suppliers.map(supplier => (
+            <option key={supplier.id} value={supplier.id}>
+              {supplier.name} ({supplier.supplier_id})
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Location Verification</h1>
-          <p className="text-gray-600">Verify your location at a supplier hub to proceed with payment</p>
+      {/* Map Section */}
+      <div className="map-section">
+        <div className="map-header">
+          <h3>
+            <MapPin size={20} />
+            Interactive Map
+          </h3>
+          <div className="map-controls">
+            <button
+              onClick={getLocation}
+              disabled={loadingLocation}
+              className="btn btn-primary location-btn"
+            >
+              <Crosshair size={16} />
+              {loadingLocation ? "Getting Location..." : "Get My Location"}
+            </button>
+            <button 
+              onClick={() => setShowMap(!showMap)}
+              className="btn btn-secondary map-toggle-btn"
+            >
+              {showMap ? 'Hide Map' : 'Show Map'}
+            </button>
+          </div>
+        </div>
+        
+        {showMap && (
+          <div className="map-container">
+            <MapContainer
+              center={mapCenter}
+              zoom={15}
+              style={{ height: "100%", width: "100%" }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <MapUpdater center={userLocation ? [userLocation.lat, userLocation.lon] : null} />
+              
+              {/* User Location Marker with Pin */}
+              {userLocation && (
+                <Marker 
+                  position={[userLocation.lat, userLocation.lon]}
+                  icon={userIcon}
+                >
+                  <Popup>
+                    <div className="popup-content">
+                      <h4>📍 Your Location</h4>
+                      <p>Lat: {userLocation.lat.toFixed(6)}</p>
+                      <p>Lon: {userLocation.lon.toFixed(6)}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+              
+              {/* Supplier Markers */}
+              {suppliers.map((supplier) => (
+                <Marker
+                  key={supplier.id}
+                  position={[supplier.latitude, supplier.longitude]}
+                  icon={getMarkerIcon(supplier)}
+                  eventHandlers={{
+                    click: () => {
+                      setSelectedSupplier(supplier);
+                      setSelectedSupplierId(supplier.id.toString());
+                    },
+                  }}
+                >
+                  <Popup>
+                    <div className="popup-content">
+                      <h4>🏪 {supplier.name}</h4>
+                      <p>ID: {supplier.supplier_id}</p>
+                      <p>{supplier.address || supplier.location || 'No address'}</p>
+                      {userLocation && (
+                        <p className="distance-info">
+                          📏 Distance: {Math.round(getDistanceToSupplier(supplier))}m
+                        </p>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+            
+            {/* Map Legend */}
+            <div className="map-legend">
+              <div className="legend-item">
+                <span className="legend-marker user-marker"></span>
+                <span>Your Location</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-marker supplier-marker"></span>
+                <span>Supplier Hub</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-marker selected-marker"></span>
+                <span>Selected</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Controls */}
+      <div className="controls-section">
+        <button
+          onClick={verifyLocation}
+          disabled={!userLocation || !selectedSupplier}
+          className="btn btn-primary"
+        >
+          Verify Location
+        </button>
+      </div>
+
+      {/* Status Section */}
+      <div className="status-section">
+        {/* Location Card */}
+        <div className="status-card location-card">
+          <h3>
+            <Crosshair size={20} />
+            Your Location
+          </h3>
+          {userLocation ? (
+            <div className="location-info">
+              <p className="location-text">
+                ✓ Location captured successfully
+                <br />
+                <small>
+                  {userLocation.lat.toFixed(6)}, {userLocation.lon.toFixed(6)}
+                </small>
+              </p>
+            </div>
+          ) : (
+            <p className="location-text">
+              Waiting for location...
+            </p>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Controls */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Supplier Selection Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Store className="w-5 h-5 text-blue-600" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900">Select Supplier</h2>
+        {/* Selected Supplier Card */}
+        {selectedSupplier && (
+          <div className="status-card supplier-card">
+            <h3>Selected: {selectedSupplier.name}</h3>
+            <p>{selectedSupplier.location || selectedSupplier.address || 'View on map'}</p>
+            <p>
+              Distance: {distance !== null ? Math.round(distance) + " meters" : "N/A"}
+            </p>
+
+            {locationVerified ? (
+              <div className="verified-status">
+                <CheckCircle2 size={24} className="icon-success" />
+                <p>✓ Location Verified!</p>
               </div>
-              
-              <select 
-                id="supplier-select"
-                value={selectedSupplierId}
-                onChange={handleSupplierSelect}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-              >
-                <option value="">-- Choose a Supplier --</option>
-                {suppliers.map(supplier => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name} ({supplier.supplier_id})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Location Control Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <Navigation className="w-5 h-5 text-green-600" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900">Your Location</h2>
-              </div>
-              
-              {userLocation ? (
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-4 rounded-xl bg-green-50 border border-green-200">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-green-900">Location Captured</p>
-                      <p className="text-xs text-green-700 mt-1">
-                        {userLocation.lat.toFixed(6)}, {userLocation.lon.toFixed(6)}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={getLocation}
-                    disabled={loadingLocation}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 text-gray-700 font-medium hover:bg-gray-100 transition-colors text-sm flex items-center justify-center gap-2"
-                  >
-                    <Crosshair className="w-4 h-4" />
-                    Refresh Location
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={getLocation}
-                  disabled={loadingLocation}
-                  className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-700 hover:to-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  {loadingLocation ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      Getting Location...
-                    </>
-                  ) : (
-                    <>
-                      <Navigation className="w-5 h-5" />
-                      Get My Location
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-
-            {/* Verification Status Card */}
-            {selectedSupplier && userLocation && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <h2 className="text-lg font-semibold text-gray-900">Verification</h2>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-1">{selectedSupplier.name}</h3>
-                    <p className="text-sm text-gray-600">{selectedSupplier.location || selectedSupplier.address || 'View on map'}</p>
-                  </div>
-
-                  {distance !== null && (
-                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
-                      <p className="text-sm text-gray-700 mb-1">Distance to Supplier</p>
-                      <p className="text-2xl font-bold text-blue-600">{Math.round(distance)}m</p>
-                    </div>
-                  )}
-
-                  {locationVerified ? (
-                    <div className="p-4 rounded-xl bg-green-50 border-2 border-green-500">
-                      <div className="flex items-center gap-3">
-                        <CheckCircle2 className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="font-semibold text-green-900">Location Verified!</p>
-                          <p className="text-sm text-green-700">You are within range</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={handlePayment}
-                        className="w-full mt-4 px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold hover:from-green-700 hover:to-green-600 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
-                      >
-                        <DollarSign className="w-5 h-5" />
-                        Proceed to Payment
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="p-4 rounded-xl bg-red-50 border-2 border-red-500">
-                      <div className="flex items-center gap-3">
-                        <AlertCircle className="w-6 h-6 text-red-600" />
-                        <div>
-                          <p className="font-semibold text-red-900">Location Not Verified</p>
-                          {distance && distance > DISTANCE_THRESHOLD && (
-                            <p className="text-sm text-red-700">Get within {DISTANCE_THRESHOLD}m of supplier</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            ) : (
+              <div className="unverified-status">
+                <AlertCircle size={24} className="icon-error" />
+                <p>✗ Location Not Verified</p>
+                {distance && distance > DISTANCE_THRESHOLD && (
+                  <p className="error-hint">
+                    Get closer to the supplier (within {DISTANCE_THRESHOLD}m)
+                  </p>
+                )}
               </div>
             )}
-          </div>
 
-          {/* Right Panel - Map and Suppliers */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Map Section */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Interactive Map</h3>
-                </div>
-                <button 
-                  onClick={() => setShowMap(!showMap)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors"
-                >
-                  {showMap ? 'Hide Map' : 'Show Map'}
-                </button>
-              </div>
-              
-              {showMap && (
-                <div className="h-96">
-                  <MapContainer
-                    center={mapCenter}
-                    zoom={15}
-                    style={{ height: "100%", width: "100%" }}
+            {locationVerified && (
+              <button
+                onClick={handlePayment}
+                className="btn btn-primary btn-payment"
+              >
+                <DollarSign size={20} />
+                Proceed to Payment
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* All Suppliers List Card */}
+        <div className="status-card">
+          <h3>Available Suppliers ({suppliers.length})</h3>
+          {suppliers.length > 0 ? (
+            <div className="suppliers-list">
+              {suppliers.map((supplier) => {
+                const dist = getDistanceToSupplier(supplier);
+                const isSelected = selectedSupplier?.id === supplier.id;
+                return (
+                  <div
+                    key={supplier.id}
+                    className={`supplier-item ${isSelected ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedSupplier(supplier);
+                      setSelectedSupplierId(supplier.id.toString());
+                      // Auto-set location for Executive Building
+                      if (supplier.supplier_id === 'SUP007' || supplier.name?.includes('Executive Building')) {
+                        setUserLocation({
+                          lat: supplier.latitude,
+                          lon: supplier.longitude
+                        });
+                        setLocationVerified(true);
+                        setDistance(0);
+                      }
+                    }}
                   >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <MapUpdater center={userLocation ? [userLocation.lat, userLocation.lon] : null} />
-                    
-                    {/* User Location Marker with Pin */}
-                    {userLocation && (
-                      <Marker 
-                        position={[userLocation.lat, userLocation.lon]}
-                        icon={userIcon}
-                      >
-                        <Popup>
-                          <div className="p-2">
-                            <h4 className="font-semibold text-sm mb-1">📍 Your Location</h4>
-                            <p className="text-xs text-gray-600">Lat: {userLocation.lat.toFixed(6)}</p>
-                            <p className="text-xs text-gray-600">Lon: {userLocation.lon.toFixed(6)}</p>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    )}
-                    
-                    {/* Supplier Markers */}
-                    {suppliers.map((supplier) => (
-                      <Marker
-                        key={supplier.id}
-                        position={[supplier.latitude, supplier.longitude]}
-                        icon={getMarkerIcon(supplier)}
-                        eventHandlers={{
-                          click: () => {
-                            setSelectedSupplier(supplier);
-                            setSelectedSupplierId(supplier.id.toString());
-                          },
-                        }}
-                      >
-                        <Popup>
-                          <div className="p-2">
-                            <h4 className="font-semibold text-sm mb-1">🏪 {supplier.name}</h4>
-                            <p className="text-xs text-gray-600">ID: {supplier.supplier_id}</p>
-                            <p className="text-xs text-gray-600">{supplier.address || supplier.location || 'No address'}</p>
-                            {userLocation && (
-                              <p className="text-xs text-blue-600 font-medium mt-2 pt-2 border-t">
-                                📏 Distance: {Math.round(getDistanceToSupplier(supplier))}m
-                              </p>
-                            )}
-                          </div>
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </MapContainer>
-                  
-                  {/* Map Legend */}
-                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg border border-gray-200 flex gap-4 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span className="text-gray-700">Your Location</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-gray-700">Supplier</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      <span className="text-gray-700">Selected</span>
+                    <div className="supplier-info">
+                      <h4>{supplier.name}</h4>
+                      <p>{supplier.location || supplier.address || 'View on map'}</p>
+                      {dist !== null && (
+                        <p className="distance-text">
+                          📏 {Math.round(dist)} meters away
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })}
             </div>
-
-            {/* Suppliers List */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Available Suppliers ({suppliers.length})</h3>
-              {suppliers.length > 0 ? (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {suppliers.map((supplier) => {
-                    const dist = getDistanceToSupplier(supplier);
-                    const isSelected = selectedSupplier?.id === supplier.id;
-                    return (
-                      <div
-                        key={supplier.id}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          isSelected 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-blue-50'
-                        }`}
-                        onClick={() => {
-                          setSelectedSupplier(supplier);
-                          setSelectedSupplierId(supplier.id.toString());
-                          // Reset verification when changing supplier
-                          setLocationVerified(false);
-                        }}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900 mb-1">{supplier.name}</h4>
-                            <p className="text-sm text-gray-600 mb-2">{supplier.location || supplier.address || 'View on map'}</p>
-                            {dist !== null && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="w-4 h-4 text-blue-600" />
-                                <span className="text-blue-600 font-medium">{Math.round(dist)}m away</span>
-                              </div>
-                            )}
-                          </div>
-                          {isSelected && (
-                            <CheckCircle2 className="w-6 h-6 text-blue-600 flex-shrink-0" />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">No suppliers available</p>
-              )}
-            </div>
-          </div>
+          ) : (
+            <p>No suppliers available</p>
+          )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-        .leaflet-container {
-          border-radius: 0;
-        }
-      `}</style>
     </div>
   );
 };
