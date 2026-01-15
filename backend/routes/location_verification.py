@@ -3,7 +3,7 @@ Location Verification Routes - Verify field agent is within 20m of supplier and 
 """
 
 from flask import Blueprint, request, jsonify, current_app
-from models import db, Supplier, TransactionLog
+from models import db, Supplier, TransactionLog, LocationTransaction
 from decorators import role_required
 from utils.geoutils import haversine_distance, is_within_radius
 from services.mpesa_service import initiate_vendor_payment
@@ -96,18 +96,19 @@ def verify_location(current_user):
         is_within_20m = distance <= 20
         
         if not is_within_20m:
-            # VERIFICATION FAILED - Log and return error
-            transaction = TransactionLog(
+            # VERIFICATION FAILED - Log location attempt
+            location_transaction = LocationTransaction(
                 supplier_id=supplier_id,
                 agent_id=current_user.get('user_id'),
-                status='VERIFICATION_FAIL',
+                agent_latitude=user_lat,
+                agent_longitude=user_lon,
+                supplier_latitude=supplier.latitude,
+                supplier_longitude=supplier.longitude,
                 distance_meters=distance,
-                phone_number=supplier.mpesa_phone_number,
-                amount=payment_amount,
-                transaction_type='LOCATION_VERIFICATION',
-                description=f'Location verification failed: {distance:.2f}m exceeds 20m threshold'
+                status='OUT_OF_RANGE',
+                threshold_meters=20.0
             )
-            db.session.add(transaction)
+            db.session.add(location_transaction)
             db.session.commit()
             
             current_app.logger.warning(f"❌ Verification failed: Distance {distance:.2f}m exceeds 20m")
@@ -124,18 +125,19 @@ def verify_location(current_user):
                 }
             }), 422  # 422 Unprocessable Entity
         
-        # 5. VERIFICATION SUCCESSFUL - Create initial transaction log
-        transaction = TransactionLog(
+        # 5. VERIFICATION SUCCESSFUL - Create location verification record
+        location_transaction = LocationTransaction(
             supplier_id=supplier_id,
             agent_id=current_user.get('user_id'),
-            status='VERIFICATION_OK',
+            agent_latitude=user_lat,
+            agent_longitude=user_lon,
+            supplier_latitude=supplier.latitude,
+            supplier_longitude=supplier.longitude,
             distance_meters=distance,
-            phone_number=supplier.mpesa_phone_number,
-            amount=payment_amount,
-            transaction_type='LOCATION_VERIFICATION',
-            description=f'Location verified: {distance:.2f}m within threshold'
+            status='VERIFIED',
+            threshold_meters=20.0
         )
-        db.session.add(transaction)
+        db.session.add(location_transaction)
         db.session.commit()
         
         current_app.logger.info(f"✅ Verification successful! Distance: {distance:.2f}m")
@@ -150,13 +152,13 @@ def verify_location(current_user):
             remarks=f'Payment to {supplier.name} - Verified at {distance:.2f}m'
         )
         
-        # 7. Update transaction with payment result
+        # 7. Link location transaction to payment and update status
         if payment_result.get('success'):
-            # Payment initiated successfully
-            transaction.status = 'PAYMENT_SENT'
-            transaction.mpesa_checkout_id = payment_result.get('conversation_id')
-            transaction.result_description = payment_result.get('message')
-            db.session.commit()
+            # Payment created successfully in mpesa_service, link it to location verification
+            transaction_id = payment_result.get('transaction_id')
+            if transaction_id:
+                location_transaction.mpesa_transaction_id = transaction_id
+                db.session.commit()
             
             current_app.logger.info(f"✅ Payment sent successfully! Conversation ID: {payment_result.get('conversation_id')}")
             
@@ -183,9 +185,8 @@ def verify_location(current_user):
                 }
             }), 200
         else:
-            # Payment failed
-            transaction.status = 'PAYMENT_FAILED'
-            transaction.result_description = payment_result.get('error', 'Payment initiation failed')
+            # Payment failed - update location transaction status
+            location_transaction.status = 'FAILED'
             db.session.commit()
             
             current_app.logger.error(f"❌ Payment failed: {payment_result.get('error')}")

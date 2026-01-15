@@ -174,10 +174,8 @@ class MpesaService:
                 agent_id=agent_id,
                 phone_number=phone_number,
                 amount=amount,
-                status='PENDING',  # Initial status
-                transaction_type='B2C_PAYMENT',
-                description=remarks,
-                distance_meters=0.0  # Set to 0 for direct B2C payments without location verification
+                status='PENDING',
+                remarks=remarks
             )
             db.session.add(transaction)
             db.session.commit()
@@ -205,10 +203,12 @@ class MpesaService:
                     conversation_id = result.get('ConversationID')
                     originator_conversation_id = result.get('OriginatorConversationID')
                     
-                    # Update transaction with M-Pesa IDs
-                    transaction.mpesa_checkout_id = conversation_id
+                    # Update transaction with initial M-Pesa response
+                    transaction.conversation_id = conversation_id
+                    transaction.originator_conversation_id = originator_conversation_id
+                    transaction.response_code = response_code
+                    transaction.response_description = result.get('ResponseDescription', 'Payment sent to M-Pesa')
                     transaction.status = 'PAYMENT_SENT'
-                    transaction.result_description = result.get('ResponseDescription', 'Payment sent to M-Pesa')
                     db.session.commit()
                     
                     current_app.logger.info(f"✅ B2C Payment sent successfully. Conversation ID: {conversation_id}")
@@ -217,6 +217,7 @@ class MpesaService:
                         'success': True,
                         'conversation_id': conversation_id,
                         'originator_conversation_id': originator_conversation_id,
+                        'transaction_id': transaction.id,
                         'message': 'Payment sent successfully. Recipient will receive money shortly.',
                         'transaction_id': transaction.id
                     }

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from decorators.role_required import role_required
 from models.transaction_log import TransactionLog
+from models.location_transaction import LocationTransaction
 from models.supplier import Supplier
 from models.user import User
 from models.role import Role
@@ -99,7 +100,7 @@ def get_all_transactions(current_user):
 @role_required("Admin")
 def get_transactions_log(current_user):
     """
-    Get recent transaction logs (limited to 10).
+    Get recent M-Pesa transaction logs with associated location verification data (limited to 10).
     """
     try:
         logs = (
@@ -120,6 +121,12 @@ def get_transactions_log(current_user):
             except Exception:
                 agent_email = None
             
+            # Try to find associated location verification
+            distance_meters = None
+            location_transaction = LocationTransaction.query.filter_by(mpesa_transaction_id=log.id).first()
+            if location_transaction:
+                distance_meters = round(location_transaction.distance_meters, 2)
+            
             result.append({
                 "id": log.id,
                 "supplier_id": log.supplier_id,
@@ -127,11 +134,12 @@ def get_transactions_log(current_user):
                 "agent_id": log.agent_id,
                 "agent_email": agent_email,
                 "status": log.status,
-                "distance_meters": round(log.distance_meters, 2) if log.distance_meters is not None else 0.0,
+                "distance_meters": distance_meters if distance_meters is not None else 0.0,
                 "amount": log.amount,
-                "transaction_type": log.transaction_type,
-                "created_at": log.created_at.isoformat() if log.created_at else None,
-                "phone_number": log.phone_number
+                "phone_number": log.phone_number,
+                "conversation_id": log.conversation_id,
+                "transaction_receipt": log.transaction_receipt,
+                "created_at": log.created_at.isoformat() if log.created_at else None
             })
         
         return jsonify(result), 200
