@@ -85,6 +85,12 @@ class Config:
     # Callback URL for M-Pesa payment confirmations
     MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', '')
     
+    # B2C Callback URLs (for vendor payments)
+    # Get base URL from environment or use default
+    BASE_URL = os.getenv('BASE_URL', 'https://geo-verified-vendor-pay-system-2blk.onrender.com')
+    MPESA_B2C_RESULT_URL = os.getenv('MPESA_B2C_RESULT_URL', f'{BASE_URL}/api/mpesa/b2c/result')
+    MPESA_B2C_QUEUE_TIMEOUT_URL = os.getenv('MPESA_B2C_QUEUE_TIMEOUT_URL', f'{BASE_URL}/api/mpesa/b2c/timeout')
+    
     
     # ═══════════════════════════════════════════════════════════
     # APPLICATION CONFIGURATION
