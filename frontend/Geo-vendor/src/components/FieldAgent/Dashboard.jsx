@@ -164,7 +164,7 @@ const FieldAgentDashboard = () => {
         </div>
 
         <div className="content">
-          <h1>Verification Area</h1>
+          <h1>Verification Area 🧽 SpongeBob</h1>
           <p>Pending verifications: {agentData?.pending_verifications}</p>
 
           {/* Search Bar */}
