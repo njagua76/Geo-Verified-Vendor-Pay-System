@@ -233,9 +233,9 @@ const FieldAgentVerify = () => {
   }, [userLocation, selectedSupplier]);
 
   const handlePayment = () => {
-    if (selectedSupplier && locationVerified) {
-      // Redirect to payment page with supplier info
-      window.location.href = `/payment?supplier=${selectedSupplier.id}`;
+    if (selectedSupplier && locationVerified && userLocation) {
+      // Redirect to payment page with supplier info and user coordinates
+      window.location.href = `/payment?supplier=${selectedSupplier.id}&lat=${userLocation.lat}&lon=${userLocation.lon}`;
     }
   };
 
