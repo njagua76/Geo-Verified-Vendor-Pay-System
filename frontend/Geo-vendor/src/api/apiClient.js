@@ -208,7 +208,7 @@ export const verificationAPI = {
       supplier_id: supplierId,
     }),
   
-  getTransactionLogs: () => apiClient.get('/api/transactions-log'),
+  getTransactionLogs: () => apiClient.get('/api/admin/transactions-log'),
 };
 
 export const usersAPI = {
