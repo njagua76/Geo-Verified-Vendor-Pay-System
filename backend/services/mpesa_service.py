@@ -142,18 +142,26 @@ class MpesaService:
                 }
             
             # 2. Prepare B2C payment request
+            # Format phone number - M-Pesa expects format: 254XXXXXXXXX (no + prefix)
+            formatted_phone = phone_number.strip().replace('+', '').replace(' ', '')
+            if not formatted_phone.startswith('254'):
+                # If phone starts with 0, replace with 254
+                formatted_phone = '254' + formatted_phone.lstrip('0')
+            
             payload = {
                 "InitiatorName": self.initiator_name,
                 "SecurityCredential": self.security_credential,
                 "CommandID": "BusinessPayment",  # For B2C payments to businesses/vendors
                 "Amount": int(amount),  # Must be integer
                 "PartyA": self.shortcode,  # Your business shortcode (sender)
-                "PartyB": phone_number,  # Recipient phone number
+                "PartyB": formatted_phone,  # Recipient phone number (254XXXXXXXXX)
                 "Remarks": remarks,
                 "QueueTimeOutURL": self.b2c_queue_timeout_url,
                 "ResultURL": self.b2c_result_url,
                 "Occasion": f"Payment to supplier {supplier_id}"
             }
+            
+            current_app.logger.info(f"📱 Formatted phone: {phone_number} -> {formatted_phone}")
             
             headers = {
                 'Authorization': f'Bearer {access_token}',
