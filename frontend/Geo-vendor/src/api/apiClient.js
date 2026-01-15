@@ -89,6 +89,7 @@ export const adminAPI = {
   getTransactionDetail: (transactionId) => apiClient.get(`/api/admin/transactions/${transactionId}`),
   getSuppliers: () => apiClient.get('/api/admin/suppliers'),
   getUsers: () => apiClient.get('/api/admin/users'),
+  getTransactionLogs: () => apiClient.get('/api/admin/transactions-log'),
 };
 
 export default apiClient;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, RefreshCw, CheckCircle2, XCircle, AlertCircle, Building2, MapPin, Zap, Clock, Users } from 'lucide-react';
-import { dashboardAPI, suppliersAPI } from '../api/apiClient';
+import { dashboardAPI, suppliersAPI, adminAPI } from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -56,15 +56,10 @@ export const Dashboard = () => {
         setSuppliers([]);
       }
 
-      // Fetch transactions (optional - when backend endpoint ready)
+      // Fetch transactions
       try {
-        const txnResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/transactions-log`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (txnResponse.ok) {
-          const txns = await txnResponse.json();
+        const txnResponse = await adminAPI.getTransactionLogs();
+        const txns = txnResponse.data;
           const txnArray = Array.isArray(txns) ? txns : txns.transactions || [];
           setTransactions(txnArray.slice(0, 10));
 
