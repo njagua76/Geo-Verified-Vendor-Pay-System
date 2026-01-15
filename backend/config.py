@@ -64,25 +64,38 @@ class Config:
     
     
     # ═══════════════════════════════════════════════════════════
-    # M-PESA DARAJA API CONFIGURATION (Using this as placeholder for now)
+    # M-PESA DARAJA API CONFIGURATION
     # ═══════════════════════════════════════════════════════════
     
-    #Place holder for now, will work on this in the future
-    # Safaricom Daraja API credentials (for M-Pesa payments)
+    # Daraja API credentials (for OAuth token generation)
     MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY', '')
     MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', '')
     
-    # Business short code (your paybill/till number)
-    MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '')
-    
-    # Passkey for online payments (from Daraja portal)
-    MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', '')
-    
-    # Daraja API endpoints
-    # Sandbox = testing environment, Production = real money!
+    # M-Pesa Environment (sandbox = testing, production = real money)
     MPESA_ENVIRONMENT = os.getenv('MPESA_ENVIRONMENT', 'sandbox')
     
-    # Callback URL for M-Pesa payment confirmations
+    # Business short code (your paybill/till number)
+    # For B2C in sandbox, use 600998 (test shortcode)
+    MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '600998')
+    
+    # For B2C Payments (Business to Customer)
+    # Initiator name - the API operator username
+    MPESA_INITIATOR_NAME = os.getenv('MPESA_INITIATOR_NAME', 'testapi')
+    
+    # Security Credential - encrypted password for B2C operations
+    # In sandbox: use 'Safaricom999!*!' (test credential)
+    # In production: encrypt your initiator password using Safaricom's certificate
+    MPESA_SECURITY_CREDENTIAL = os.getenv('MPESA_SECURITY_CREDENTIAL', 'Safaricom999!*!')
+    
+    # Callback URLs for B2C payment results
+    MPESA_B2C_QUEUE_TIMEOUT_URL = os.getenv('MPESA_B2C_QUEUE_TIMEOUT_URL', '')
+    MPESA_B2C_RESULT_URL = os.getenv('MPESA_B2C_RESULT_URL', '')
+    
+    # Default payment amount for successful location verification (in KES)
+    PAYMENT_AMOUNT = float(os.getenv('PAYMENT_AMOUNT', '100'))
+    
+    # Legacy STK Push settings (keeping for reference, not used in B2C)
+    MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', '')
     MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', '')
     
     

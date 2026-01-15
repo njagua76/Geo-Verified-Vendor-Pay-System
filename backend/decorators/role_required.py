@@ -23,6 +23,9 @@ def role_required(required_role):
                 if user_role != required_role:
                     return jsonify({"error": "Forbidden: insufficient role"}), 403
 
+                # Pass decoded token as current_user to the route
+                return f(decoded, *args, **kwargs)
+
             except IndexError:
                 return jsonify({"error": "Token not provided"}), 401
             except jwt.ExpiredSignatureError:
@@ -30,7 +33,6 @@ def role_required(required_role):
             except jwt.InvalidTokenError:
                 return jsonify({"error": "Invalid token"}), 401
 
-            return f(*args, **kwargs)
         return wrapper
     return decorator
 

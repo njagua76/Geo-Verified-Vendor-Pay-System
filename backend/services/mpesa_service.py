@@ -4,17 +4,20 @@ M-Pesa Daraja API Service
 This module handles all interactions with the Safaricom M-Pesa Daraja API.
 It supports:
 - OAuth token generation
-- STK Push (Lipa Na M-Pesa Online)
+- B2C (Business to Customer) payments for vendor disbursements
+- STK Push (Lipa Na M-Pesa Online) - for customer payments
 - Payment callback handling
 - Transaction status checking
 
 Environment Variables Required:
     MPESA_CONSUMER_KEY - Daraja API consumer key
     MPESA_CONSUMER_SECRET - Daraja API consumer secret
-    MPESA_SHORTCODE - Business short code (paybill/till)
-    MPESA_PASSKEY - Online payment passkey
+    MPESA_SHORTCODE - Business short code (for B2C: usually 600998 in sandbox)
+    MPESA_INITIATOR_NAME - API operator username (e.g., 'testapi')
+    MPESA_SECURITY_CREDENTIAL - Encrypted initiator password
     MPESA_ENVIRONMENT - 'sandbox' or 'production'
-    MPESA_CALLBACK_URL - URL for payment callbacks
+    MPESA_B2C_QUEUE_TIMEOUT_URL - URL for queue timeout callbacks
+    MPESA_B2C_RESULT_URL - URL for payment result callbacks
 """
 
 import base64
@@ -34,23 +37,32 @@ class MpesaService:
     SANDBOX_BASE_URL = "https://sandbox.safaricom.co.ke"
     PRODUCTION_BASE_URL = "https://api.safaricom.co.ke"
     
-    # STK Push endpoint
-    STK_PUSH_ENDPOINT = "/mpesa/stkpush/v1/processrequest"
-    
     # OAuth endpoint
     OAUTH_ENDPOINT = "/oauth/v1/generate?grant_type=client_credentials"
+    
+    # B2C Payment endpoint (Business to Customer - paying vendors)
+    B2C_PAYMENT_ENDPOINT = "/mpesa/b2c/v1/paymentrequest"
+    
+    # STK Push endpoint (Customer pays business)
+    STK_PUSH_ENDPOINT = "/mpesa/stkpush/v1/processrequest"
     
     # Transaction status endpoint
     TRANSACTION_STATUS_ENDPOINT = "/mpesa/transactionstatus/v1/query"
     
     def __init__(self):
         """Initialize M-Pesa service with configuration."""
-        # Try to get from Flask config first, then fall back to environment variables
+        # Load configuration from Flask config or environment variables
         self.consumer_key = current_app.config.get('MPESA_CONSUMER_KEY') or os.getenv('MPESA_CONSUMER_KEY', '')
         self.consumer_secret = current_app.config.get('MPESA_CONSUMER_SECRET') or os.getenv('MPESA_CONSUMER_SECRET', '')
         self.shortcode = current_app.config.get('MPESA_SHORTCODE') or os.getenv('MPESA_SHORTCODE', '')
-        self.passkey = current_app.config.get('MPESA_PASSKEY') or os.getenv('MPESA_PASSKEY', '')
+        self.initiator_name = current_app.config.get('MPESA_INITIATOR_NAME') or os.getenv('MPESA_INITIATOR_NAME', 'testapi')
+        self.security_credential = current_app.config.get('MPESA_SECURITY_CREDENTIAL') or os.getenv('MPESA_SECURITY_CREDENTIAL', '')
         self.environment = current_app.config.get('MPESA_ENVIRONMENT') or os.getenv('MPESA_ENVIRONMENT', 'sandbox')
+        self.b2c_queue_timeout_url = current_app.config.get('MPESA_B2C_QUEUE_TIMEOUT_URL') or os.getenv('MPESA_B2C_QUEUE_TIMEOUT_URL', '')
+        self.b2c_result_url = current_app.config.get('MPESA_B2C_RESULT_URL') or os.getenv('MPESA_B2C_RESULT_URL', '')
+        
+        # Legacy STK Push settings (keeping for compatibility)
+        self.passkey = current_app.config.get('MPESA_PASSKEY') or os.getenv('MPESA_PASSKEY', '')
         self.callback_url = current_app.config.get('MPESA_CALLBACK_URL') or os.getenv('MPESA_CALLBACK_URL', '')
         
         # Set base URL based on environment
@@ -60,11 +72,14 @@ class MpesaService:
         """
         Generate OAuth access token for Daraja API.
         
+        This token is required for all subsequent API calls.
+        Token expires after 1 hour, so should be cached in production.
+        
         Returns:
-            str: Access token for subsequent API calls
+            str: Access token for subsequent API calls, or None if failed
         """
         try:
-            # Create authorization header
+            # Create authorization header with base64 encoded credentials
             credentials = f"{self.consumer_key}:{self.consumer_secret}"
             encoded_credentials = base64.b64encode(credentials.encode()).decode()
             
@@ -81,14 +96,166 @@ class MpesaService:
             
             if response.status_code == 200:
                 token_data = response.json()
-                return token_data.get('access_token')
+                access_token = token_data.get('access_token')
+                current_app.logger.info("✅ Successfully obtained M-Pesa access token")
+                return access_token
             else:
-                current_app.logger.error(f"Failed to get access token: {response.text}")
+                current_app.logger.error(f"❌ Failed to get access token: {response.text}")
                 return None
                 
         except Exception as e:
-            current_app.logger.error(f"Error getting access token: {str(e)}")
+            current_app.logger.error(f"❌ Error getting access token: {str(e)}")
             return None
+    
+    def initiate_b2c_payment(self, phone_number, amount, supplier_id, agent_id, remarks="Vendor payment"):
+        """
+        Initiate B2C (Business to Customer) payment to a vendor.
+        
+        This is used to disburse payments to suppliers after location verification.
+        Money flows FROM your business TO the recipient's M-Pesa account.
+        
+        Args:
+            phone_number (str): Recipient's phone number (format: 254XXXXXXXXX)
+            amount (float): Payment amount in KES (minimum 10 KES)
+            supplier_id (int): Database ID of the supplier receiving payment
+            agent_id (int): ID of the field agent initiating the payment
+            remarks (str): Payment description/remarks
+            
+        Returns:
+            dict: {
+                'success': bool,
+                'conversation_id': str (if successful),
+                'originator_conversation_id': str (if successful),
+                'message': str,
+                'transaction_id': int (database transaction log ID)
+            }
+        """
+        try:
+            current_app.logger.info(f"🚀 Initiating B2C payment: {amount} KES to {phone_number}")
+            
+            # 1. Get OAuth access token
+            access_token = self._get_access_token()
+            if not access_token:
+                return {
+                    'success': False,
+                    'error': 'Failed to obtain M-Pesa access token'
+                }
+            
+            # 2. Prepare B2C payment request
+            payload = {
+                "InitiatorName": self.initiator_name,
+                "SecurityCredential": self.security_credential,
+                "CommandID": "BusinessPayment",  # For B2C payments to businesses/vendors
+                "Amount": int(amount),  # Must be integer
+                "PartyA": self.shortcode,  # Your business shortcode (sender)
+                "PartyB": phone_number,  # Recipient phone number
+                "Remarks": remarks,
+                "QueueTimeOutURL": self.b2c_queue_timeout_url,
+                "ResultURL": self.b2c_result_url,
+                "Occasion": f"Payment to supplier {supplier_id}"
+            }
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # 3. Create pending transaction log BEFORE making the request
+            transaction = TransactionLog(
+                supplier_id=supplier_id,
+                agent_id=agent_id,
+                phone_number=phone_number,
+                amount=amount,
+                status='PENDING',  # Initial status
+                transaction_type='B2C_PAYMENT',
+                description=remarks,
+                distance_meters=None  # Will be updated by location verification
+            )
+            db.session.add(transaction)
+            db.session.commit()
+            
+            current_app.logger.info(f"📝 Created transaction log ID: {transaction.id}")
+            
+            # 4. Make B2C API request to M-Pesa
+            response = requests.post(
+                f"{self.base_url}{self.B2C_PAYMENT_ENDPOINT}",
+                json=payload,
+                headers=headers,
+                timeout=30
+            )
+            
+            current_app.logger.info(f"📡 M-Pesa B2C Response Status: {response.status_code}")
+            current_app.logger.info(f"📡 M-Pesa B2C Response: {response.text}")
+            
+            # 5. Process response
+            if response.status_code == 200:
+                result = response.json()
+                response_code = result.get('ResponseCode', '')
+                
+                if response_code == '0':
+                    # Success! Payment request accepted
+                    conversation_id = result.get('ConversationID')
+                    originator_conversation_id = result.get('OriginatorConversationID')
+                    
+                    # Update transaction with M-Pesa IDs
+                    transaction.mpesa_checkout_id = conversation_id
+                    transaction.status = 'PAYMENT_SENT'
+                    transaction.result_description = result.get('ResponseDescription', 'Payment sent to M-Pesa')
+                    db.session.commit()
+                    
+                    current_app.logger.info(f"✅ B2C Payment sent successfully. Conversation ID: {conversation_id}")
+                    
+                    return {
+                        'success': True,
+                        'conversation_id': conversation_id,
+                        'originator_conversation_id': originator_conversation_id,
+                        'message': 'Payment sent successfully. Recipient will receive money shortly.',
+                        'transaction_id': transaction.id
+                    }
+                else:
+                    # M-Pesa rejected the request
+                    error_message = result.get('ResponseDescription', 'Payment request failed')
+                    transaction.status = 'PAYMENT_FAILED'
+                    transaction.result_description = error_message
+                    db.session.commit()
+                    
+                    current_app.logger.error(f"❌ B2C Payment failed: {error_message}")
+                    
+                    return {
+                        'success': False,
+                        'error': error_message,
+                        'transaction_id': transaction.id
+                    }
+            else:
+                # HTTP error
+                error_message = f"M-Pesa API error: {response.status_code} - {response.text}"
+                transaction.status = 'PAYMENT_FAILED'
+                transaction.result_description = error_message
+                db.session.commit()
+                
+                current_app.logger.error(f"❌ {error_message}")
+                
+                return {
+                    'success': False,
+                    'error': error_message,
+                    'transaction_id': transaction.id
+                }
+                
+        except Exception as e:
+            error_message = f"Exception during B2C payment: {str(e)}"
+            current_app.logger.error(f"❌ {error_message}")
+            
+            # Update transaction if it exists
+            if 'transaction' in locals():
+                transaction.status = 'PAYMENT_FAILED'
+                transaction.result_description = error_message
+                db.session.commit()
+                
+            return {
+                'success': False,
+                'error': error_message,
+                'transaction_id': transaction.id if 'transaction' in locals() else None
+            }
     
     def _generate_stk_password(self):
         """
@@ -392,4 +559,50 @@ def process_mpesa_callback(callback_data):
     """
     mpesa = MpesaService()
     return mpesa.process_callback(callback_data)
+
+
+def initiate_vendor_payment(phone_number, amount, supplier_id, agent_id, remarks="Vendor disbursement"):
+    """
+    Convenience function to initiate B2C payment to a vendor.
+    
+    This is the main function you'll use for paying vendors after location verification.
+    
+    Args:
+        phone_number (str): Vendor's M-Pesa phone number (format: 254XXXXXXXXX)
+        amount (float): Payment amount in KES
+        supplier_id (int): Database ID of the supplier
+        agent_id (int): ID of the field agent initiating payment
+        remarks (str): Payment description
+        
+    Returns:
+        dict: {
+            'success': bool,
+            'conversation_id': str (if successful),
+            'message': str,
+            'transaction_id': int
+        }
+        
+    Example:
+        result = initiate_vendor_payment(
+            phone_number='254712345678',
+            amount=100,
+            supplier_id=1,
+            agent_id=5,
+            remarks='Payment for verified delivery'
+        )
+        
+        if result['success']:
+            print(f"Payment sent! Transaction ID: {result['transaction_id']}")
+        else:
+            print(f"Payment failed: {result['error']}")
+    """
+    mpesa = MpesaService()
+    return mpesa.initiate_b2c_payment(
+        phone_number=phone_number,
+        amount=amount,
+        supplier_id=supplier_id,
+        agent_id=agent_id,
+        remarks=remarks
+    )
+
 
