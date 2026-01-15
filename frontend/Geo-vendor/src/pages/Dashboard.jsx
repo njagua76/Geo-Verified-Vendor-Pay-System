@@ -60,20 +60,19 @@ export const Dashboard = () => {
       try {
         const txnResponse = await adminAPI.getTransactionLogs();
         const txns = txnResponse.data;
-          const txnArray = Array.isArray(txns) ? txns : txns.transactions || [];
-          setTransactions(txnArray.slice(0, 10));
+        const txnArray = Array.isArray(txns) ? txns : txns.transactions || [];
+        setTransactions(txnArray.slice(0, 10));
 
-          // Update transaction stats
-          const successCount = txnArray.filter((t) => t.status === 'PAYMENT_SENT').length;
-          const failedCount = txnArray.filter((t) => t.status === 'VERIFICATION_FAIL' || t.status === 'PAYMENT_FAILED').length;
+        // Update transaction stats
+        const successCount = txnArray.filter((t) => t.status === 'PAYMENT_SENT').length;
+        const failedCount = txnArray.filter((t) => t.status === 'VERIFICATION_FAIL' || t.status === 'PAYMENT_FAILED').length;
 
-          setStats((prevStats) => ({
-            ...prevStats,
-            totalTransactions: txnArray.length,
-            successfulTransactions: successCount,
-            failedTransactions: failedCount,
-          }));
-        }
+        setStats((prevStats) => ({
+          ...prevStats,
+          totalTransactions: txnArray.length,
+          successfulTransactions: successCount,
+          failedTransactions: failedCount,
+        }));
       } catch (err) {
         console.log('Transactions fetch error:', err);
       }
