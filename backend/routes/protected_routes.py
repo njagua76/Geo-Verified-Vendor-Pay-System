@@ -15,47 +15,8 @@ from math import radians, sin, cos, sqrt, atan2
 protected_bp = Blueprint('protected', __name__)
 
 
-@protected_bp.route('/admin/dashboard', methods=['GET'])
-@role_required('Admin')
-def admin_dashboard(current_user):
-    """
-    Admin-only dashboard endpoint.
-
-    Returns comprehensive dashboard statistics for admin users.
-    Only users with 'Admin' role can access this.
-    Transactions temporarily disabled pending DB migration.
-    """
-    try:
-        # Get user statistics
-        field_agent_role = Role.query.filter_by(role_name='Field Agent').first()
-        admin_role = Role.query.filter_by(role_name='Admin').first()
-
-        total_users = User.query.count()
-        field_agents = User.query.filter_by(role_id=field_agent_role.id).count() if field_agent_role else 0
-        admins = User.query.filter_by(role_id=admin_role.id).count() if admin_role else 0
-        total_suppliers = Supplier.query.count()
-        # Temporarily skip transactions until DB migration
-        total_transactions = 0
-
-        return jsonify({
-            'message': 'Welcome to Admin Dashboard',
-            'user': {
-                'email': current_user['email'],
-                'role': current_user['role_name'],
-                'user_id': current_user['user_id']
-            },
-            'stats': {
-                'total_users': total_users,
-                'total_field_agents': field_agents,
-                'total_admins': admins,
-                'total_suppliers': total_suppliers,
-                'total_transactions': total_transactions,
-                'active_field_agents': field_agents,
-                'active_suppliers': total_suppliers
-            }
-        }), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# NOTE: Admin dashboard moved to admin_routes.py to avoid duplication
+# The /api/admin/dashboard endpoint is now handled by admin_bp
 
 
 @protected_bp.route('/agent/verify', methods=['GET'])
