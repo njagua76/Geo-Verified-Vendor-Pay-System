@@ -107,7 +107,7 @@ def get_all_transactions(current_user):
 @role_required("Admin")
 def get_transactions_log(current_user):
     """
-    Get recent M-Pesa transaction logs (simplified - just raw data from transactions_log table).
+    Get recent M-Pesa transaction logs with supplier and agent names.
     """
     try:
         logs = (
@@ -119,14 +119,33 @@ def get_transactions_log(current_user):
 
         result = []
         for log in logs:
+            # Get supplier name
+            supplier_name = "Unknown Supplier"
+            if log.supplier_id:
+                try:
+                    from models.supplier import Supplier
+                    supplier = Supplier.query.get(log.supplier_id)
+                    if supplier:
+                        supplier_name = supplier.name
+                except Exception:
+                    supplier_name = f"Supplier {log.supplier_id}"
+            
+            # Get agent name
+            agent_name = "Unknown Agent"
+            if log.agent_id:
+                try:
+                    from models.user import User
+                    agent = User.query.get(log.agent_id)
+                    if agent:
+                        agent_name = agent.email.split('@')[0] if agent.email else f"Agent {log.agent_id}"
+                except Exception:
+                    agent_name = f"Agent {log.agent_id}"
+            
             result.append({
                 "id": log.id,
-                "supplier_id": log.supplier_id,
-                "supplier_name": f"Supplier {log.supplier_id}",  # Simple placeholder
-                "agent_id": log.agent_id,
-                "agent_email": f"agent_{log.agent_id}@example.com",  # Simple placeholder
+                "supplier_name": supplier_name,
+                "agent_name": agent_name,
                 "status": log.status,
-                "distance_meters": 0.0,  # Not in TransactionLog model
                 "amount": float(log.amount) if log.amount else 0.0,
                 "phone_number": log.phone_number,
                 "conversation_id": log.conversation_id,
