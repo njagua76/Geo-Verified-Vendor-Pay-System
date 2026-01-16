@@ -126,7 +126,7 @@ def get_transactions_log(current_user):
                 "agent_id": log.agent_id,
                 "agent_email": f"agent_{log.agent_id}@example.com",  # Simple placeholder
                 "status": log.status,
-                "distance_meters": round(log.distance_meters, 2) if log.distance_meters else 0.0,
+                "distance_meters": 0.0,  # Not in TransactionLog model
                 "amount": float(log.amount) if log.amount else 0.0,
                 "phone_number": log.phone_number,
                 "conversation_id": log.conversation_id,
