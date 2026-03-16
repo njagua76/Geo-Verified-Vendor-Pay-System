@@ -11,12 +11,9 @@ db = SQLAlchemy()
 migrate = Migrate()
 
 def create_app():
+    from .config import Config
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-        "DATABASE_URL", "postgresql://user:password@localhost/dbname"
-    )
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "supersecretkey")
+    app.config.from_object(Config)
 
     CORS(app)
     db.init_app(app)
